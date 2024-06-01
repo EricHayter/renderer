@@ -1,3 +1,4 @@
+#include "model.h"
 #include <algorithm>
 #include <SDL2/SDL.h>
 #include <cstdint>
@@ -87,6 +88,9 @@ int main(int argc, char** argv)
     SDL_Delay(4000);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    Model model{ "head.obj" };    
+
     return 0;
 }
 
