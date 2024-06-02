@@ -16,7 +16,15 @@ Model::Model(std::string filename)
         return;
     }
 
-    std::string strInput{};
-    while (inf >> strInput)
-        std::cout << strInput << "\n";
+    for (std::string line{}; std::getline(inf, line);) {
+        if (line.length() == 0)
+            continue;
+
+        switch (line[0]) {
+        case 'v':
+            break;
+        
+        }
+    }
 }
+
