@@ -1,9 +1,11 @@
 #include "model.h"
 
+#include <cstddef>
 #include <vector>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 Model::Model(std::string filename) 
     : verticies{}    
@@ -16,15 +18,71 @@ Model::Model(std::string filename)
         return;
     }
 
+
     for (std::string line{}; std::getline(inf, line);) {
         if (line.length() == 0)
             continue;
-
-        switch (line[0]) {
+	
+		switch (line[0]) {
         case 'v':
+			verticies.push_back(ModelParsing::parse_vertex(line));
             break;
-        
+		case 'f':
+			break;
+		default:
+			break;		
         }
     }
 }
+
+// given a string of input get the vertex value
+Vertex ModelParsing::parse_vertex(const std::string &line)
+{
+	std::vector<std::string> split_strs { ModelParsing::split_string(line) };
+	if (split_strs.size() == 4) {
+		return {
+			std::stof(split_strs[1]),	// don't count 'v' char
+			std::stof(split_strs[2]),
+			std::stof(split_strs[3]),
+		};
+	} else if (split_strs.size() == 5) {
+		return {
+			std::stof(split_strs[1]),
+			std::stof(split_strs[2]),
+			std::stof(split_strs[3]),
+			std::stof(split_strs[4]),
+		};
+	}
+	throw "vertex objects must have 3 or 4 entries!";
+}
+
+// splits string at space characters
+std::vector<std::string> ModelParsing::split_string(const std::string &str)
+{
+	std::vector<std::string> strings {};	
+	int start_idx { 0 };
+	int len { 0 };
+	bool in_string { false };
+	for (int i = 0; i < str.length(); i++) {
+		if (str[i] == ' ') {
+			if (in_string) { // cut off the string and add to vector
+				strings.push_back(str.substr(start_idx, len));	
+				len = 0;
+				in_string = false;
+			}
+		} else { // non white=space char
+			if (!in_string) {
+				in_string = true;
+				start_idx = i;
+			}
+			len++;
+		}
+	}
+
+	if (in_string)
+		strings.push_back(str.substr(start_idx, len));
+
+	return strings;
+}
+
 

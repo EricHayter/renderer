@@ -16,8 +16,9 @@ public:
 
 namespace ModelParsing
 {
-    bool is_vertex(std::string line);
-    Point parse_vertex(std::string line);
+    bool is_vertex(const std::string &line);
+	Point parse_vertex(const std::string &line);
+	std::vector<std::string> split_string(const std::string &str);
 }
 
 #endif

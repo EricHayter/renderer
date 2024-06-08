@@ -18,7 +18,6 @@ void draw_line(Line l, SDL_Renderer *renderer, Color color)
             color.b,
             color.a);
 
-
     int y {};
     bool is_steep {false};
     if (std::abs(l.to.y - l.from.y) > std::abs(l.to.x - l.from.x)) {

@@ -8,46 +8,46 @@ typedef struct {
     uint8_t r, g, b, a;
 } Color;
 
-typedef struct Point_t {
+typedef struct Vertex_t {
     float x;
     float y;
     float z;
     float w; // optional argument (defaults to 0)
 
-    Point_t(float x, float y) : 
+    Vertex_t(float x, float y) : 
         x{ x },
         y{ y },
         z{ 0 },
         w{ 1 }
     {}
 
-    Point_t() : 
+    Vertex_t() : 
         x{ 0 },
         y{ 0 },
         z{ 0 },
         w{ 1 }
     {}
 
-    Point_t(float x, float y, float z) :
+    Vertex_t(float x, float y, float z) :
         x{ x },
         y{ y },
         z{ z },
         w{ 1 }
     {}
 
-    Point_t(float x, float y, float z, float w) :
+    Vertex_t(float x, float y, float z, float w) :
         x{ x },
         y{ y },
         z{ z },
         w{ w }
     {}
-} Point;
+} Vertex;
 
 typedef struct Line_t {
-    Point to;
-    Point from; 
+    Vertex to;
+    Vertex from; 
 
-    Line_t(Point to, Point from) :
+    Line_t(Vertex to, Vertex from) :
         to{ to },
         from {from }
     {}
