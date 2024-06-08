@@ -56,6 +56,39 @@ Vertex ModelParsing::parse_vertex(const std::string &line)
 	throw "vertex objects must have 3 or 4 entries!";
 }
 
+// rename these variables they aren't great
+FaceTuple ModelParsing::parse_face_tuple(const std::string &line)
+{
+	unsigned long start{ 0 };
+	unsigned long stop{ line.find('/') };
+	int u{ 0 };
+
+	if (stop == -1) {
+		u = std::stoi(line.substr(start, line.length()));
+		return { u };
+	} else {
+		u = std::stoi(line.substr(start, stop - start));	
+	}
+	
+	start = stop + 1;
+	stop = line.find('/', start);
+	int v{ 0 };	
+	if (stop == -1) {
+		v = std::stoi(line.substr(start, line.length()));
+		return { u, v };
+	} else {
+		if (stop - start == 0) // in case of no second argument i.e. u//w
+			v = 0;
+		else
+			v = std::stoi(line.substr(start, stop - start));	
+	}
+
+	int w{ 0 };
+	start = stop + 1;
+	w = std::stoi(line.substr(start, line.length()));
+	return { u, v, w };
+}
+
 // splits string at space characters
 std::vector<std::string> ModelParsing::split_string(const std::string &str)
 {

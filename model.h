@@ -121,8 +121,8 @@ public:
 
 namespace ModelParsing
 {
-    bool is_vertex(const std::string &line);
 	Vertex parse_vertex(const std::string &line);
+	FaceTuple parse_face_tuple(const std::string &line);
 	std::vector<std::string> split_string(const std::string &str);
 }
 

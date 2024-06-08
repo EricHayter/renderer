@@ -44,11 +44,11 @@ int main(int argc, char** argv)
 //    SDL_Quit();
 //
 //    Model model{ "head.obj" };    
-
-	std::vector<std::string> strs { ModelParsing::split_string("Hello, world!    ") };
-	for (int i = 0; i < strs.size(); i++) {
-		std::cout << strs[i] << "end\n";
-	}
+	
+	FaceTuple ft{ ModelParsing::parse_face_tuple("5") };
+	std::cout << ft.vertex << "\n";
+	std::cout << ft.texture << "\n";
+	std::cout << ft.normal << "\n";
 
     return 0;
 }
