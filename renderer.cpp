@@ -1,5 +1,27 @@
 #include "renderer.h"
+#include "model.h"
 #include <algorithm>
+
+// this is just a POC I'll be editting the values of the vertices in this
+// function (will edit to remove this feature later)
+void draw_model(const Model &model, SDL_Renderer *renderer)
+{
+	for (int i = 0; i < model.nfaces(); i++) {
+		std::vector<FaceTuple> face = model.face(i);
+
+		for (int j = 0; j < face.size(); j++) { // outer loop for start points
+			Vertex start = model.vertex(face[j].vertex - 1); // indexes start at 1
+			start.x = (start.x + 1.) * SCREEN_WIDTH / 2.;
+			start.y = (start.y + 1.) * SCREEN_HEIGHT / 2.;
+			for (int k = j + 1; k < face.size(); k++) {
+				Vertex stop = model.vertex(face[k].vertex - 1);
+				stop.x = (stop.x + 1.) * SCREEN_WIDTH / 2.;
+				stop.y = (stop.y + 1.) * SCREEN_HEIGHT / 2.;
+				draw_line({start, stop}, renderer, {255, 255, 255});
+			}
+		}
+	}
+}
 
 void draw_line(Line l, SDL_Renderer *renderer, Color color)
 {

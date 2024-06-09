@@ -5,6 +5,9 @@
 #include <SDL2/SDL.h>
 #include <cstdint>
 
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+
 typedef struct {
     uint8_t r, g, b, a;
 } Color;
@@ -19,6 +22,7 @@ typedef struct Line_t {
     {}
 } Line;
 
+void draw_model(const Model &model, SDL_Renderer *renderer);
 void draw_line(Line l, SDL_Renderer *renderer, Color color);
 
 #endif
