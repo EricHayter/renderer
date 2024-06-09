@@ -115,8 +115,12 @@ class Model
 {
 private:
     std::vector<Vertex> verticies;
+	std::vector<FaceTuple> faces;
 public:
     Model(std::string filename);
+	int nfaces();
+	Vertex vertex(int i);
+	FaceTuple face(int i);
 };
 
 namespace ModelParsing

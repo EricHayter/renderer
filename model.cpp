@@ -18,7 +18,6 @@ Model::Model(std::string filename)
         return;
     }
 
-
     for (std::string line{}; std::getline(inf, line);) {
         if (line.length() == 0)
             continue;
@@ -33,6 +32,21 @@ Model::Model(std::string filename)
 			break;		
         }
     }
+}
+
+int Model::nfaces()
+{
+	return faces.size();
+}
+
+Vertex Model::vertex(int i)
+{
+	return verticies[i];
+}
+
+FaceTuple Model::face(int i)
+{
+	return faces[i];
 }
 
 // given a string of input get the vertex value
