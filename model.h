@@ -118,9 +118,9 @@ private:
 	std::vector<std::vector<FaceTuple>> faces;
 public:
     Model(std::string filename);
-	int nfaces();
-	Vertex vertex(int i);
-	std::vector<FaceTuple> face(int i);
+	int nfaces() const;
+	Vertex vertex(int i) const;
+	std::vector<FaceTuple> face(int i) const;
 };
 
 namespace ModelParsing

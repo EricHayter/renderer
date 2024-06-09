@@ -36,17 +36,17 @@ Model::Model(std::string filename) :
     }
 }
 
-int Model::nfaces()
+int Model::nfaces() const
 {
 	return faces.size();
 }
 
-Vertex Model::vertex(int i)
+Vertex Model::vertex(int i) const
 {
 	return verticies[i];
 }
 
-std::vector<FaceTuple> Model::face(int i)
+std::vector<FaceTuple> Model::face(int i) const
 {
 	return faces[i];
 }
