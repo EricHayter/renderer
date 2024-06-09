@@ -7,8 +7,9 @@
 #include <string>
 #include <string_view>
 
-Model::Model(std::string filename) 
-    : verticies{}    
+Model::Model(std::string filename) :
+	verticies{},
+	faces{}
 {
     std::ifstream inf{ filename }; 
 
@@ -27,7 +28,7 @@ Model::Model(std::string filename)
 			verticies.push_back(ModelParsing::parse_vertex(line));
             break;
 		case 'f':
-			
+			faces.push_back(ModelParsing::parse_face(line));
 			break;
 		default:
 			break;		
@@ -45,7 +46,7 @@ Vertex Model::vertex(int i)
 	return verticies[i];
 }
 
-FaceTuple Model::face(int i)
+std::vector<FaceTuple> Model::face(int i)
 {
 	return faces[i];
 }
