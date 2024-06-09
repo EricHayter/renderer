@@ -27,6 +27,7 @@ Model::Model(std::string filename)
 			verticies.push_back(ModelParsing::parse_vertex(line));
             break;
 		case 'f':
+			
 			break;
 		default:
 			break;		
@@ -68,6 +69,16 @@ Vertex ModelParsing::parse_vertex(const std::string &line)
 		};
 	}
 	throw "vertex objects must have 3 or 4 entries!";
+}
+
+std::vector<FaceTuple> ModelParsing::parse_face(const std::string &line)
+{
+	std::vector<std::string> face_tuple_strings = split_string(line);
+	std::vector<FaceTuple> faces{};
+	for (int i = 1; i < face_tuple_strings.size(); i++) {
+		faces.push_back(ModelParsing::parse_face_tuple(face_tuple_strings[i]));
+	}
+	return faces;	
 }
 
 // rename these variables they aren't great
@@ -131,5 +142,3 @@ std::vector<std::string> ModelParsing::split_string(const std::string &str)
 
 	return strings;
 }
-
-
