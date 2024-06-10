@@ -42,7 +42,7 @@ void draw_line(Line l, SDL_Renderer *renderer, Color color)
 
     int y {};
     bool is_steep {false};
-    if (std::abs(l.to.y - l.from.y) > std::abs(l.to.x - l.from.x)) {
+    if (std::abs(l.from.y - l.to.y) > std::abs(l.from.x - l.to.x)) {
         std::swap(l.from.x, l.from.y);
         std::swap(l.to.x, l.to.y);
         is_steep = true;
@@ -50,6 +50,7 @@ void draw_line(Line l, SDL_Renderer *renderer, Color color)
 
     if (l.to.x < l.from.x) {
         std::swap(l.to.x, l.from.x);
+		std::swap(l.from.y, l.to.y);
     }
 
     for (int x = l.from.x; x <= l.to.x; x++) {
@@ -62,4 +63,3 @@ void draw_line(Line l, SDL_Renderer *renderer, Color color)
         }
     }
 }
-
