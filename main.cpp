@@ -32,6 +32,15 @@ int main(int argc, char** argv)
 
     Model model{ "head.obj" };    
 	draw_model(model, renderer);
+	// draw_line({{0, 0}, {100, 100}}, renderer, {255, 255, 255});
+	set_color(renderer, {0, 255, 0, 255});
+	draw_triangle({50, 50}, {50, 100}, {100, 100}, renderer, {255, 255, 255});
+	set_color(renderer, {255, 0, 255, 255});
+	draw_triangle({50, 50}, {100, 50}, {100, 100}, renderer, {255, 255, 255});
+	set_color(renderer, {255, 0, 0, 255});
+	draw_point(renderer, {50, 50});
+	draw_point(renderer, {100, 100});
+	draw_point(renderer, {50, 100});
 
     SDL_RenderPresent(renderer);
 
