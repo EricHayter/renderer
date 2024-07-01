@@ -12,21 +12,26 @@ typedef struct {
     uint8_t r, g, b, a;
 } Color;
 
-typedef struct Line_t {
-    Vertex to;
-    Vertex from; 
+void set_color(SDL_Renderer *renderer, Color color);
 
-    Line_t(Vertex to, Vertex from) :
-        to{ to },
-        from {from }
-    {}
+typedef struct Point2D_t {
+	int x;
+	int y;
+} Point2D;
+
+typedef struct Line_t {
+    Point2D to;
+    Point2D from; 
 } Line;
 
+Point2D project_vertex(const Vertex &v);
 void draw_model(const Model &model, SDL_Renderer *renderer);
+void draw_point(SDL_Renderer *renderer, Point2D p);
+void set_color(SDL_Renderer *renderer, Color clr);
 
-void draw_triangle(Vertex v1, Vertex v2, Vertex v3, SDL_Renderer *renderer, Color color);
-void draw_triangle_upper(const Vertex &v1, const Vertex &v2, const Vertex &v3, SDL_Renderer *renderer, Color color);
-void draw_triangle_lower(const Vertex &v1, const Vertex &v2, const Vertex &v3, SDL_Renderer *renderer, Color color);
+void draw_triangle(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color);
+void draw_triangle_upper(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color);
+void draw_triangle_lower(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color);
 void draw_line(Line l, SDL_Renderer *renderer, Color color);
 
 #endif

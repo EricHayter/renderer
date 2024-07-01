@@ -2,6 +2,27 @@
 #include "model.h"
 #include <algorithm>
 
+
+Point2D project_vertex(const Vertex &v)
+{
+	return { (int)((v.x + 1.0) * SCREEN_WIDTH / 2), 
+		(int)((1. - v.y) * SCREEN_HEIGHT / 2) };
+}
+
+void draw_point(SDL_Renderer *renderer, Point2D p)
+{
+	SDL_RenderDrawPoint(renderer, p.x, p.y);
+}
+
+void set_color(SDL_Renderer *renderer, Color clr)
+{
+    SDL_SetRenderDrawColor(renderer, 
+            clr.r,
+            clr.g,
+            clr.b,
+            clr.a);
+}
+
 // this is just a POC I'll be editting the values of the vertices in this
 // function (will edit to remove this feature later)
 void draw_model(const Model &model, SDL_Renderer *renderer)
@@ -10,95 +31,100 @@ void draw_model(const Model &model, SDL_Renderer *renderer)
 		std::vector<FaceTuple> face = model.face(i);
 
 		for (int j = 0; j < face.size(); j++) { // outer loop for start points
-			Vertex start = model.vertex(face[j].vertex - 1); // indexes start at 1
-			start.x = (start.x + 1.) * SCREEN_WIDTH / 2.;
-			start.y = (1. - start.y) * SCREEN_HEIGHT / 2.;
+			Point2D start = project_vertex(model.vertex(face[j].vertex - 1)); // indexes start at 1
 			for (int k = j + 1; k < face.size(); k++) {
-				Vertex stop = model.vertex(face[k].vertex - 1);
-				stop.x = (stop.x + 1.) * SCREEN_WIDTH / 2.;
-				stop.y = (1. - stop.y) * SCREEN_HEIGHT / 2.;
+				Point2D stop = project_vertex(model.vertex(face[k].vertex - 1));
 				draw_line({start, stop}, renderer, {255, 255, 255});
 			}
 		}
 	}
 }
 
-void draw_triangle(Vertex v1, Vertex v2, Vertex v3, SDL_Renderer *renderer, Color color)
+void draw_triangle(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color)
 {
-	if (v1.y < v2.y)
-		std::swap(v1, v2);
-	if (v2.y < v3.y)
-		std::swap(v2, v3);
-	if (v1.y < v3.y)
-		std::swap(v1, v3);
+	if (p1.y < p2.y)
+		std::swap(p1, p2);
+	if (p2.y < p3.y)
+		std::swap(p2, p3);
+	if (p1.y < p2.y)
+		std::swap(p1, p2);
 
-	// make a check to ensure that v1 and 
-	Vertex vt{ (v2.y - v1.y)*(v1.x - v3.x)/(v1.y - v3.y) + v1.x, v2.y};
-	draw_triangle_upper(v1, v2, v3, renderer, color);
-	draw_triangle_lower(v1, v2, v3, renderer, color);
+	// slope from p1 to p3	
+	Point2D vt {};
+	float m{((float) p1.y - p3.y)/(p1.x - p3.x)};
+	if (m == 0)
+		vt = p3; // what should this actually be?
+	else
+		vt = {(int)((p2.y - p1.y)/m) + p1.x, p2.y};
+	draw_triangle_upper(p1, p2, vt, renderer, color);
+	draw_triangle_lower(vt, p2, p3, renderer, color);
 }
 
-void draw_triangle_upper(const Vertex &v1, const Vertex &v2, const Vertex &v3, SDL_Renderer *renderer, Color color)
+void draw_triangle_upper(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color)
 {
-	if (v1.y == v2.y) {
-		draw_line({v1, v2}, renderer, color);	
+	if (p1.y == p2.y) { // this triangle is pointing down
 		return;
 	}
-	float s2{ static_cast<float>(v1.x - v2.x)/(v1.y - v2.y)};
-	float s3{ static_cast<float>(v1.x - v3.x)/(v1.y - v3.y)};
-	for (int y = v2.y; y <= v1.y; y++) {
-		draw_line(
-			{{(int)(v2.x + y * s2), y}, {(int)(v3.x + y * s3), y}},
-			renderer,
-			color
-		);		
+	
+	if (p2.x > p3.x)
+		std::swap(p2, p3);
+
+	float s2{ static_cast<float>(p1.x - p2.x)/(p1.y - p2.y)};
+	float s3{ static_cast<float>(p1.x - p3.x)/(p1.y - p3.y)};
+	float pointer2{ (float)p2.x }, pointer3{ (float)p3.x };
+
+	for (int y = p2.y; y <= p1.y; y++) {
+		pointer2 += s2;
+		pointer3 += s3;
+		for (int x = pointer2; x <= pointer3; x++) {
+			draw_point(renderer, {x, y});	
+		}
 	}
 }
-void draw_triangle_lower(const Vertex &v1, const Vertex &v2, const Vertex &v3, SDL_Renderer *renderer, Color color) {
-	if (v2.y == v3.y) {
-		draw_line({v2, v3}, renderer, color);	
+void draw_triangle_lower(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color) {
+	if (p2.y == p3.y) {
 		return;
 	}
-	float s1{ static_cast<float>(v3.x - v1.x)/(v3.y - v1.y)};
-	float s2{ static_cast<float>(v3.x - v2.x)/(v3.y - v2.y)};
-	for (int y = v2.y; y >= v3.y; y--) {
-		draw_line(
-			{{(int)(v1.x + y * s1), y}, {(int)(v2.x + y * s2), y}},
-			renderer,
-			color
-		);		
+
+	if (p1.x > p2.x) // make sure that p1 is on the left
+		std::swap(p1, p2);
+
+	float sl{ ((float)p3.x - p1.x)/(p3.y - p1.y)};
+	float sr{ ((float)p3.x - p2.x)/(p3.y - p2.y)};
+	float pointerl{ (float)p3.x }, pointerr{ (float)p3.x };
+	for (int y = p3.y; y <= p2.y; y++) {
+		pointerl += sl;
+		pointerr += sr;	
+		for (int x = pointerl; x <= pointerr; x++) { // dependent on x values!!!
+			draw_point(renderer, {x, y});	
+		}
 	}
 }
 
 void draw_line(Line l, SDL_Renderer *renderer, Color color)
-
 {
-    SDL_SetRenderDrawColor(renderer, 
-            color.r,
-            color.g,
-            color.b,
-            color.a);
-
+	Point2D to{ l.to };
+	Point2D from{ l.from };
     int y {};
     bool is_steep {false};
-    if (std::abs(l.from.y - l.to.y) > std::abs(l.from.x - l.to.x)) { // transpose if we have a steep line
-        std::swap(l.from.x, l.from.y);
-        std::swap(l.to.x, l.to.y);
+    if (std::abs(from.y - to.y) > std::abs(from.x - to.x)) { // transpose if we have a steep line
+        std::swap(from.x, from.y);
+        std::swap(to.x, to.y);
         is_steep = true;
     }
 
-    if (l.to.x < l.from.x) { // make sure direction doesn´t effect render
-        std::swap(l.to.x, l.from.x);
-		std::swap(l.from.y, l.to.y);
+    if (to.x < from.x) { // make sure direction doesn´t effect render
+        std::swap(to.x, from.x);
+		std::swap(from.y, to.y);
     }
 
-    for (int x = l.from.x; x <= l.to.x; x++) {
-        float t {static_cast<float>(x - l.from.x)/(l.to.x - l.from.x)};
-        y = l.from.y + (l.to.y - l.from.y) * t;
+    for (int x = from.x; x <= to.x; x++) {
+        float t {static_cast<float>(x - from.x)/(to.x - from.x)};
+        y = from.y + (to.y - from.y) * t;
         if (is_steep) {
-            SDL_RenderDrawPoint(renderer, y, x);
+            draw_point(renderer, {y, x});
         } else {
-            SDL_RenderDrawPoint(renderer, x, y);
+			draw_point(renderer, {x, y});
         }
     }
 }
