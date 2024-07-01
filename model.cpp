@@ -23,6 +23,7 @@ Model::Model(std::string filename) :
         if (line.length() == 0)
             continue;
 	
+		// switch this to split line soon
 		switch (line[0]) {
         case 'v':
 			verticies.push_back(ModelParsing::parse_vertex(line));
