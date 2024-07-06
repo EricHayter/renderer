@@ -3,10 +3,17 @@
 #include <algorithm>
 #include <cmath>
 
+constexpr Color cyan{ 0, 255, 255 };
+constexpr Vector3D light_dir{ 0, 0, -1 };
 
 float dot_product(const Vector3D& v1, const Vector3D& v2)
 {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+Vector3D to_vertex(const Vertex &v) 
+{
+	return { v.x, v.y, v.z };
 }
 
 Vector3D cross_product(const Vector3D& v1, const Vector3D& v2)
@@ -50,8 +57,14 @@ void draw_model(const Model &model, SDL_Renderer *renderer)
 {
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
+		Vertex v1{ model.vertex(face[0].vertex - 1) };
+		
+		// Triangle fanning
+		for (int j = 2; j < face.size(); j++) { // outer loop for start points
+			Vertex v2{ model.vertex(face[j-1].vertex - 1) };
+			Vertex v3{ model.vertex(face[j].vertex - 1) };
+			Vector3D n{ normalize(cross_product(v2, v3)) };
 
-		for (int j = 0; j < face.size(); j++) { // outer loop for start points
 			Point2D start = project_vertex(model.vertex(face[j].vertex - 1)); // indexes start at 1
 			for (int k = j + 1; k < face.size(); k++) {
 				Point2D stop = project_vertex(model.vertex(face[k].vertex - 1));

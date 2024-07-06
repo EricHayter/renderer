@@ -14,11 +14,7 @@ typedef struct {
 
 void set_color(SDL_Renderer *renderer, Color color);
 
-typedef struct Vector3D_t {
-	float x;
-	float y;
-	float z;
-} Vector3D;
+typedef Vertex Vector3D;
 
 float dot_product(const Vector3D& v1, const Vector3D& v2);
 Vector3D cross_product(const Vector3D& v1, const Vector3D& v2);

@@ -11,30 +11,30 @@ Model::Model(std::string filename) :
 	verticies{},
 	faces{}
 {
-    std::ifstream inf{ filename }; 
+	std::ifstream inf{ filename }; 
 
-    if (!inf)
-    {
-        std::cerr << "Could not open file.\n";
-        return;
-    }
+	if (!inf)
+	{
+		std::cerr << "Could not open file.\n";
+		return;
+	}
 
-    for (std::string line{}; std::getline(inf, line);) {
-        if (line.length() == 0)
-            continue;
-	
+	for (std::string line{}; std::getline(inf, line);) {
+		if (line.length() == 0)
+			continue;
+
 		// switch this to split line soon
 		switch (line[0]) {
-        case 'v':
-			verticies.push_back(ModelParsing::parse_vertex(line));
-            break;
-		case 'f':
-			faces.push_back(ModelParsing::parse_face(line));
-			break;
-		default:
-			break;		
-        }
-    }
+			case 'v':
+				verticies.push_back(ModelParsing::parse_vertex(line));
+				break;
+			case 'f':
+				faces.push_back(ModelParsing::parse_face(line));
+				break;
+			default:
+				break;		
+		}
+	}
 }
 
 int Model::nfaces() const
@@ -55,28 +55,22 @@ std::vector<FaceTuple> Model::face(int i) const
 // given a string of input get the vertex value
 Vertex ModelParsing::parse_vertex(const std::string &line)
 {
+	// ignoring w entry for simplicity
 	std::vector<std::string> split_strs { ModelParsing::split_string(line) };
-	if (split_strs.size() == 4) {
-		return {
-			std::stof(split_strs[1]),	// don't count 'v' char
-			std::stof(split_strs[2]),
-			std::stof(split_strs[3]),
-		};
-	} else if (split_strs.size() == 5) {
-		return {
-			std::stof(split_strs[1]),
-			std::stof(split_strs[2]),
-			std::stof(split_strs[3]),
-			std::stof(split_strs[4]),
-		};
-	}
-	throw "vertex objects must have 3 or 4 entries!";
+	return {
+		std::stof(split_strs[1]),	// don't count 'v' char
+		std::stof(split_strs[2]),
+		std::stof(split_strs[3]),
+	};
 }
 
 std::vector<FaceTuple> ModelParsing::parse_face(const std::string &line)
 {
 	std::vector<std::string> face_tuple_strings = split_string(line);
 	std::vector<FaceTuple> faces{};
+	if (face_tuple_strings.size() < 3) {
+		throw "faces must have at least 3 verticies";
+	}
 	for (int i = 1; i < face_tuple_strings.size(); i++) {
 		faces.push_back(ModelParsing::parse_face_tuple(face_tuple_strings[i]));
 	}
@@ -96,7 +90,7 @@ FaceTuple ModelParsing::parse_face_tuple(const std::string &line)
 	} else {
 		u = std::stoi(line.substr(start, stop - start));	
 	}
-	
+
 	start = stop + 1;
 	stop = line.find('/', start);
 	int v{ 0 };	
