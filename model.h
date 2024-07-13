@@ -1,14 +1,11 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include "vector3d.h"
 #include <vector>
 #include <string>
 
-typedef struct Vertex_t {
-    float x;
-    float y;
-    float z;
-} Vertex;
+typedef Vector3D Vertex;
 
 typedef struct TextureCoord_t {
 	float u;

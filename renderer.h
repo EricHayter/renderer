@@ -16,9 +16,6 @@ void set_color(SDL_Renderer *renderer, Color color);
 
 typedef Vertex Vector3D;
 
-float dot_product(const Vector3D& v1, const Vector3D& v2);
-Vector3D cross_product(const Vector3D& v1, const Vector3D& v2);
-
 typedef struct Point2D_t {
 	int x;
 	int y;

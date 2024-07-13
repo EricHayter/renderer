@@ -31,9 +31,9 @@ int main(int argc, char** argv)
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     Model model{ "head.obj" };    
-	draw_model(model, renderer);
 	// draw_line({{0, 0}, {100, 100}}, renderer, {255, 255, 255});
 	set_color(renderer, {0, 255, 0, 255});
+	draw_model(model, renderer);
 	draw_triangle({50, 50}, {50, 100}, {100, 100}, renderer, {255, 255, 255});
 	set_color(renderer, {255, 0, 255, 255});
 	draw_triangle({50, 50}, {100, 100}, {75, 200}, renderer, {255, 255, 255});
