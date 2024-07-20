@@ -3,9 +3,7 @@
 #include "model.h"
 #include <algorithm>
 
-constexpr Color cyan{ 0, 255, 255 };
 constexpr Vector3D light_dir{ 0, 0, -1 };
-
 
 Point2D project_vertex(const Vertex &v)
 {
@@ -47,7 +45,7 @@ void draw_model(const Model &model, SDL_Renderer *renderer)
 			Point2D p3{ project_vertex(v3) };
 
 			// find the normal of vectors from v1 to v2 and v1 to v3
-			Vector3D normal{ normalize(cross_product(v2 - v1, v3 - v1)) };
+			Vector3D normal{ normalize(cross_product(v3 - v1, v2 - v1)) };
 
 			// intensity of light reflected will be equal to dot product of view vector and normal of face
 			float intensity{ std::abs(dot_product(normal, light_dir)) };
@@ -97,8 +95,8 @@ void draw_triangle_upper(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *rende
 
 	float s2{ static_cast<float>(p1.x - p2.x)/(p1.y - p2.y)};
 	float s3{ static_cast<float>(p1.x - p3.x)/(p1.y - p3.y)};
-	float pointer2{ (float)p2.x };
-	float pointer3{ (float)p3.x };
+	float pointer2{ (float)p2.x - s2 };
+	float pointer3{ (float)p3.x - s3 };
 
 	for (int y = p2.y; y <= p1.y; y++) {
 		pointer2 += s2;
@@ -118,8 +116,8 @@ void draw_triangle_lower(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *rende
 
 	float sl{ ((float)p3.x - p1.x)/(p3.y - p1.y)};
 	float sr{ ((float)p3.x - p2.x)/(p3.y - p2.y)};
-	float pointerl{ (float)p3.x };
-	float pointerr{ (float)p3.x };
+	float pointerl{ (float)p3.x - sl };
+	float pointerr{ (float)p3.x - sr};
 	for (int y = p3.y; y <= p2.y; y++) {
 		pointerl += sl;
 		pointerr += sr;	

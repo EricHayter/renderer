@@ -33,12 +33,6 @@ int main(int argc, char** argv)
     Model model{ "head.obj" };    
 	draw_model(model, renderer);
 	// draw_line({{270, 600}, {230, 550}}, renderer, {255, 0, 0});
-	draw_point(renderer, {300, 600});
-	draw_triangle({279, 594}, {293, 574}, {357, 573}, renderer, {255, 0, 255});
-	set_color(renderer, {0, 255, 255});
-	draw_point(renderer, {279, 594});
-	draw_point(renderer, {293, 574});
-	draw_point(renderer, {357, 573});
 
 //	draw_triangle({50, 50}, {50, 100}, {100, 100}, renderer, {0, 255, 255});
 //	draw_triangle({50, 50}, {200, 200}, {200, 50}, renderer, {255, 255, 0});
