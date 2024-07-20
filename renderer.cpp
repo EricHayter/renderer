@@ -48,9 +48,9 @@ void draw_model(const Model &model, SDL_Renderer *renderer)
 			Vector3D normal{ normalize(cross_product(v3 - v1, v2 - v1)) };
 
 			// intensity of light reflected will be equal to dot product of view vector and normal of face
-			float intensity{ std::abs(dot_product(normal, light_dir)) };
-
-			draw_triangle(p1, p2, p3, renderer, {(uint8_t)(255 * intensity), (uint8_t)(255 * intensity), (uint8_t)(255 * intensity)});
+			float intensity{ dot_product(normal, light_dir) };
+			if (intensity > 0)
+				draw_triangle(p1, p2, p3, renderer, {(uint8_t)(255 * intensity), (uint8_t)(255 * intensity), (uint8_t)(255 * intensity)});
 		}
 	}
 }
