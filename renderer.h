@@ -5,8 +5,8 @@
 #include <SDL2/SDL.h>
 #include <cstdint>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 900 // 640
+#define SCREEN_HEIGHT 900 // 480
 
 typedef struct {
     uint8_t r, g, b, a;

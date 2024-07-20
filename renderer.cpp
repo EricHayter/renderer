@@ -15,6 +15,8 @@ Point2D project_vertex(const Vertex &v)
 
 void draw_point(SDL_Renderer *renderer, Point2D p)
 {
+	if ((p.x >= 230 && p.x <= 270) && (p.y >= 550 && p.y <= 600))
+		p.x += 1;
 	SDL_RenderDrawPoint(renderer, p.x, p.y);
 }
 
@@ -34,24 +36,30 @@ void draw_model(const Model &model, SDL_Renderer *renderer)
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
 		Vertex v1{ model.vertex(face[0].vertex - 1) };
-		
+		Point2D p1{ project_vertex(v1) };
+
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
 			Vertex v2{ model.vertex(face[j-1].vertex - 1) };
-			Vertex v3{ model.vertex(face[j].vertex - 1) };
-			Vector3D n{ normalize(cross_product(v2, v3)) };
+			Point2D p2{ project_vertex(v2) };
 
-			Point2D start = project_vertex(model.vertex(face[j].vertex - 1)); // indexes start at 1
-			for (int k = j + 1; k < face.size(); k++) {
-				Point2D stop = project_vertex(model.vertex(face[k].vertex - 1));
-				draw_line({start, stop}, renderer, {255, 255, 255});
-			}
+			Vertex v3{ model.vertex(face[j].vertex - 1) };
+			Point2D p3{ project_vertex(v3) };
+
+			// find the normal of vectors from v1 to v2 and v1 to v3
+			Vector3D normal{ normalize(cross_product(v2 - v1, v3 - v1)) };
+
+			// intensity of light reflected will be equal to dot product of view vector and normal of face
+			float intensity{ std::abs(dot_product(normal, light_dir)) };
+
+			draw_triangle(p1, p2, p3, renderer, {(uint8_t)(255 * intensity), (uint8_t)(255 * intensity), (uint8_t)(255 * intensity)});
 		}
 	}
 }
 
 void draw_triangle(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color)
 {
+	set_color(renderer, color);
 	if (p1.y < p2.y)
 		std::swap(p1, p2);
 	if (p2.y < p3.y)
@@ -59,13 +67,21 @@ void draw_triangle(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, C
 	if (p1.y < p2.y)
 		std::swap(p1, p2);
 
+	if (p1.x == p3.x) { // this should be cleaned more
+		Point2D vt{ p1.x, p2.y };
+		draw_triangle_upper(p1, p2, vt, renderer, color);
+		draw_triangle_lower(vt, p2, p3, renderer, color);
+		return;
+	}
+	
 	// slope from p1 to p3	
+	// TODO this can fail btw
 	Point2D vt {};
 	float m{((float) p1.y - p3.y)/(p1.x - p3.x)};
 	if (m == 0)
-		vt = p3; // what should this actually be?
+		vt = p2; // what should this actually be?
 	else
-		vt = {(int)((p2.y - p1.y)/m) + p1.x, p2.y};
+		vt = {(int)((p2.y - p1.y)/m) + p1.x, p2.y}; 
 	draw_triangle_upper(p1, p2, vt, renderer, color);
 	draw_triangle_lower(vt, p2, p3, renderer, color);
 }
@@ -76,12 +92,13 @@ void draw_triangle_upper(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *rende
 		return;
 	}
 	
-	if (p2.x > p3.x)
+	if (p2.x > p3.x) // put p2 on the left and p3 on the right
 		std::swap(p2, p3);
 
 	float s2{ static_cast<float>(p1.x - p2.x)/(p1.y - p2.y)};
 	float s3{ static_cast<float>(p1.x - p3.x)/(p1.y - p3.y)};
-	float pointer2{ (float)p2.x }, pointer3{ (float)p3.x };
+	float pointer2{ (float)p2.x };
+	float pointer3{ (float)p3.x };
 
 	for (int y = p2.y; y <= p1.y; y++) {
 		pointer2 += s2;
@@ -101,11 +118,12 @@ void draw_triangle_lower(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *rende
 
 	float sl{ ((float)p3.x - p1.x)/(p3.y - p1.y)};
 	float sr{ ((float)p3.x - p2.x)/(p3.y - p2.y)};
-	float pointerl{ (float)p3.x }, pointerr{ (float)p3.x };
+	float pointerl{ (float)p3.x };
+	float pointerr{ (float)p3.x };
 	for (int y = p3.y; y <= p2.y; y++) {
 		pointerl += sl;
 		pointerr += sr;	
-		for (int x = pointerl; x <= pointerr; x++) { // dependent on x values!!!
+		for (int x = pointerl; x <= pointerr; x++) { 
 			draw_point(renderer, {x, y});	
 		}
 	}
@@ -113,6 +131,7 @@ void draw_triangle_lower(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *rende
 
 void draw_line(Line l, SDL_Renderer *renderer, Color color)
 {
+	set_color(renderer, color);
 	Point2D to{ l.to };
 	Point2D from{ l.from };
     int y {};
