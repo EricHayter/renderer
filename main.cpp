@@ -2,6 +2,8 @@
 #include "model.h"
 #include "renderer.h"
 #include <SDL2/SDL.h>
+#include <limits>
+#include <algorithm>
 
 int main(int argc, char** argv)
 {
@@ -25,13 +27,22 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    renderer = SDL_CreateRenderer(window, -1, 0);
+	Context context{
+		SDL_CreateRenderer(window, -1, 0),		// sdl_renderer init
+		{ 0, 0, -1 },							// light direction
+		{}										// zbuffer
+	};
+	std::for_each(context.zbuffer.begin(), context.zbuffer.end(), [](int x) {
+		std::for_each(context.zbuffer[x].begin(), context.zbuffer[x].end(), [](int y) {
+					context.zbuffer[x][y] = std::min<int>();
+				});
+			});
     
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     Model model{ "head.obj" };    
-	draw_model(model, renderer);
+	draw_model(context, model);
 	// draw_line({{270, 600}, {230, 550}}, renderer, {255, 0, 0});
 
 //	draw_triangle({50, 50}, {50, 100}, {100, 100}, renderer, {0, 255, 255});

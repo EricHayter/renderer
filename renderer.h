@@ -3,7 +3,9 @@
 
 #include "model.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
 #include <cstdint>
+#include <array>
 
 #define SCREEN_WIDTH 900 // 640
 #define SCREEN_HEIGHT 900 // 480
@@ -26,14 +28,20 @@ typedef struct Line_t {
     Point2D from; 
 } Line;
 
-Point2D project_vertex(const Vertex &v);
-void draw_model(const Model &model, SDL_Renderer *renderer);
-void draw_point(SDL_Renderer *renderer, Point2D p);
-void set_color(SDL_Renderer *renderer, Color clr);
+typedef struct Context_t {
+	SDL_Renderer *sdl_renderer;
+	Vector3D light_dir;
+	std::array<std::array<int, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
+} Context;
 
-void draw_triangle(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color);
-void draw_triangle_upper(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color);
-void draw_triangle_lower(Point2D p1, Point2D p2, Point2D p3, SDL_Renderer *renderer, Color color);
-void draw_line(Line l, SDL_Renderer *renderer, Color color);
+Point2D project_vertex(const Vertex &v);
+void draw_model(const Context &context, const Model &model);
+void draw_point(const Context &context, Point2D p);
+void set_color(const Context &context, Color clr);
+
+void draw_triangle(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_triangle_upper(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_triangle_lower(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_line(const Context &context, Line l, Color color);
 
 #endif
