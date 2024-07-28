@@ -49,55 +49,50 @@ void draw_model(const Context &context, const Model &model)
 			// intensity of light reflected will be equal to dot product of view vector and normal of face
 			float intensity{ dot_product(normal, light_dir) };
 			if (intensity > 0)
-				draw_triangle(context, p1, p2, p3, {(uint8_t)(255 * intensity), (uint8_t)(255 * intensity), (uint8_t)(255 * intensity)});
+				draw_face(context, p1, p2, p3, {(uint8_t)(255 * intensity), (uint8_t)(255 * intensity), (uint8_t)(255 * intensity)});
 		}
 	}
 }
 
-void draw_triangle(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color)
+void draw_face(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
 	set_color(context, color);
-	if (p1.y < p2.y)
-		std::swap(p1, p2);
-	if (p2.y < p3.y)
-		std::swap(p2, p3);
-	if (p1.y < p2.y)
-		std::swap(p1, p2);
+	if (v1.y < v2.y)
+		std::swap(v1, v2);
+	if (v2.y < v3.y)
+		std::swap(v2, v3);
+	if (v1.y < v2.y)
+		std::swap(v1, v2);
 
-	if (p1.x == p3.x) { // this should be cleaned more
-		Point2D vt{ p1.x, p2.y };
-		draw_triangle_upper(context, p1, p2, vt, color);
-		draw_triangle_lower(context, vt, p2, p3, color);
+	if (v3.y - v1.y == 0)
 		return;
-	}
-	
-	// slope from p1 to p3	
-	// TODO this can fail btw
-	Point2D vt {};
-	float m{((float) p1.y - p3.y)/(p1.x - p3.x)};
-	if (m == 0)
-		vt = p2; // what should this actually be?
-	else
-		vt = {(int)((p2.y - p1.y)/m) + p1.x, p2.y}; 
-	draw_triangle_upper(context, p1, p2, vt, color);
-	draw_triangle_lower(context, vt, p2, p3, color);
+
+	// parametrization of a line from p1 to p3
+	float t{ v2.y/((float) v3.y - v1.y) - v3.y };	
+	float x{ (v3.x - v1.x)*t + v3.x };
+	float y{ v2.y };
+	float z{ (v3.z - v1.z)*t + v3.z };
+
+	Vertex vt{ x, y, z};
+	draw_face_upper(context, v1, v2, vt, color);
+	draw_face_lower(context, vt, v2, v3, color);
 }
 
-void draw_triangle_upper(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color)
+void draw_triangle_upper(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
-	if (p1.y == p2.y) { // this triangle is pointing down
+	if (v1.y == v2.y) { // this triangle is pointing down
 		return;
 	}
 	
-	if (p2.x > p3.x) // put p2 on the left and p3 on the right
-		std::swap(p2, p3);
+	if (v2.x > v3.x) // put v2 on the left and v3 on the right
+		std::swap(v2, v3);
 
-	float s2{ static_cast<float>(p1.x - p2.x)/(p1.y - p2.y)};
-	float s3{ static_cast<float>(p1.x - p3.x)/(p1.y - p3.y)};
-	float pointer2{ (float)p2.x - s2 };
-	float pointer3{ (float)p3.x - s3 };
+	float s2{ static_cast<float>(v1.x - v2.x)/(v1.y - v2.y)};
+	float s3{ static_cast<float>(v1.x - v3.x)/(v1.y - v3.y)};
+	float pointer2{ (float)v2.x - s2 };
+	float pointer3{ (float)v3.x - s3 };
 
-	for (int y = p2.y; y <= p1.y; y++) {
+	for (int y = v2.y; y <= v1.y; y++) {
 		pointer2 += s2;
 		pointer3 += s3;
 		for (int x = pointer2; x <= pointer3; x++) {
@@ -105,20 +100,21 @@ void draw_triangle_upper(const Context &context, Point2D p1, Point2D p2, Point2D
 		}
 	}
 }
-void draw_triangle_lower(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color)
+
+void draw_triangle_lower(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
-	if (p2.y == p3.y) {
+	if (v2.y == v3.y) {
 		return;
 	}
 
-	if (p1.x > p2.x) // make sure that p1 is on the left
-		std::swap(p1, p2);
+	if (v1.x > v2.x) // make sure that v1 is on the left
+		std::swap(v1, v2);
 
-	float sl{ ((float)p3.x - p1.x)/(p3.y - p1.y)};
-	float sr{ ((float)p3.x - p2.x)/(p3.y - p2.y)};
-	float pointerl{ (float)p3.x - sl };
-	float pointerr{ (float)p3.x - sr};
-	for (int y = p3.y; y <= p2.y; y++) {
+	float sl{ ((float)v3.x - v1.x)/(v3.y - v1.y)};
+	float sr{ ((float)v3.x - v2.x)/(v3.y - v2.y)};
+	float pointerl{ (float)v3.x - sl };
+	float pointerr{ (float)v3.x - sr};
+	for (int y = v3.y; y <= v2.y; y++) {
 		pointerl += sl;
 		pointerr += sr;	
 		for (int x = pointerl; x <= pointerr; x++) { 

@@ -39,9 +39,9 @@ void draw_model(const Context &context, const Model &model);
 void draw_point(const Context &context, Point2D p);
 void set_color(const Context &context, Color clr);
 
-void draw_triangle(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
-void draw_triangle_upper(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
-void draw_triangle_lower(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_face(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_triangle_up(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_face_lower(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
 void draw_line(const Context &context, Line l, Color color);
 
 #endif

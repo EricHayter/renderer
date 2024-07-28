@@ -32,11 +32,11 @@ int main(int argc, char** argv)
 		{ 0, 0, -1 },							// light direction
 		{}										// zbuffer
 	};
-	std::for_each(context.zbuffer.begin(), context.zbuffer.end(), [](int x) {
-		std::for_each(context.zbuffer[x].begin(), context.zbuffer[x].end(), [](int y) {
-					context.zbuffer[x][y] = std::min<int>();
-				});
-			});
+	for (auto i = 0; i < context.zbuffer.size(); i++) {
+		for (auto j = 0; j < context.zbuffer[i].size(); j++) {
+			context.zbuffer[i][j] = 0;	
+		}	
+	}
     
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
