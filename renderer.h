@@ -6,6 +6,7 @@
 #include <SDL2/SDL_render.h>
 #include <cstdint>
 #include <array>
+#include <functional>
 
 #define SCREEN_WIDTH 900 // 640
 #define SCREEN_HEIGHT 900 // 480
@@ -34,14 +35,17 @@ typedef struct Context_t {
 	std::array<std::array<int, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
 } Context;
 
-Point2D project_vertex(const Vertex &v);
+Vertex scale_vertex(const Vertex &v);
 void draw_model(const Context &context, const Model &model);
 void draw_point(const Context &context, Point2D p);
 void set_color(const Context &context, Color clr);
 
-void draw_face(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
-void draw_triangle_up(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
-void draw_face_lower(const Context &context, Point2D p1, Point2D p2, Point2D p3, Color color);
+void draw_face(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face_upper(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face_lower(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+
+std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3, const Point2D &p);
+
 void draw_line(const Context &context, Line l, Color color);
 
 #endif

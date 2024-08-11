@@ -43,10 +43,6 @@ int main(int argc, char** argv)
 
     Model model{ "head.obj" };    
 	draw_model(context, model);
-	// draw_line({{270, 600}, {230, 550}}, renderer, {255, 0, 0});
-
-//	draw_triangle({50, 50}, {50, 100}, {100, 100}, renderer, {0, 255, 255});
-//	draw_triangle({50, 50}, {200, 200}, {200, 50}, renderer, {255, 255, 0});
 
     SDL_RenderPresent(renderer);
 

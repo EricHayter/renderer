@@ -6,10 +6,11 @@
 
 constexpr Vector3D light_dir{ 0, 0, -1 };
 
-Point2D project_vertex(const Vertex &v)
+Vertex scale_vertex(const Vertex &v)
 {
-	return { (int)((v.x + 1.0) * SCREEN_WIDTH / 2), 
-		(int)((1. - v.y) * SCREEN_HEIGHT / 2) };
+	return { 	(v.x + 1.0f) * SCREEN_WIDTH / 2, 
+				(1.0f - v.y) * SCREEN_HEIGHT / 2,
+				v.z};
 }
 
 void draw_point(const Context& context, Point2D p)
@@ -33,23 +34,27 @@ void draw_model(const Context &context, const Model &model)
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
 		Vertex v1{ model.vertex(face[0].vertex - 1) };
-		Point2D p1{ project_vertex(v1) };
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
 			Vertex v2{ model.vertex(face[j-1].vertex - 1) };
-			Point2D p2{ project_vertex(v2) };
-
 			Vertex v3{ model.vertex(face[j].vertex - 1) };
-			Point2D p3{ project_vertex(v3) };
 
 			// find the normal of vectors from v1 to v2 and v1 to v3
 			Vector3D normal{ normalize(cross_product(v3 - v1, v2 - v1)) };
 
-			// intensity of light reflected will be equal to dot product of view vector and normal of face
+			// intensity of light reflected will be equal to dot product of 
+			// view vector and normal of face
 			float intensity{ dot_product(normal, light_dir) };
+			Vertex v1n{ scale_vertex(v1) };
+			Vertex v2n{ scale_vertex(v2) };
+			Vertex v3n{ scale_vertex(v3) };
 			if (intensity > 0)
-				draw_face(context, p1, p2, p3, {(uint8_t)(255 * intensity), (uint8_t)(255 * intensity), (uint8_t)(255 * intensity)});
+				draw_face(context, v1n, v2n, v3n, 
+						{(uint8_t)(255 * intensity), 
+						 (uint8_t)(255 * intensity), 
+						 (uint8_t)(255 * intensity)}
+						 );
 		}
 	}
 }
@@ -78,7 +83,7 @@ void draw_face(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color co
 	draw_face_lower(context, vt, v2, v3, color);
 }
 
-void draw_triangle_upper(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
+void draw_face_upper(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
 	if (v1.y == v2.y) { // this triangle is pointing down
 		return;
@@ -95,13 +100,13 @@ void draw_triangle_upper(const Context &context, Vertex v1, Vertex v2, Vertex v3
 	for (int y = v2.y; y <= v1.y; y++) {
 		pointer2 += s2;
 		pointer3 += s3;
-		for (int x = pointer2; x <= pointer3; x++) {
+		for (iNT X = pointer2; x <= pointer3; x++) {
 			draw_point(context, {x, y});	
 		}
 	}
 }
 
-void draw_triangle_lower(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
+void draw_face_lower(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
 	if (v2.y == v3.y) {
 		return;
@@ -122,6 +127,28 @@ void draw_triangle_lower(const Context &context, Vertex v1, Vertex v2, Vertex v3
 		}
 	}
 }
+
+// given a point (X, Y) and 3 points to define a plane what is the solution for (X, Y)
+// in the plane?
+std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3, const Point2D &p)
+{
+	Vector3D normal{ cross_product(v3 - v1, v2 - v1) };
+	if (normal.z == 0)
+		return [](const Point2D& p){ 
+			return std::numeric_limits<float>::min();  // normal has no z component
+		};
+	float a{ normal.x };
+	float b{ normal.y };
+	float c{ normal.z };
+	float x0{ v1.x };
+	float y0{ v1.y };
+	float z0{ v1.z };
+	return [a, b, c, x0, y0, z0](const Point2D& p){ 
+		return (-a * (p.x - x0) - b * (p.y - y0))/c + z0;
+	};
+}
+
+
 
 void draw_line(const Context& context, Line l, Color color)
 {
