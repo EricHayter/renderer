@@ -32,20 +32,20 @@ typedef struct Line_t {
 typedef struct Context_t {
 	SDL_Renderer *sdl_renderer;
 	Vector3D light_dir;
-	std::array<std::array<int, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
+	std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
 } Context;
 
 Vertex scale_vertex(const Vertex &v);
-void draw_model(const Context &context, const Model &model);
-void draw_point(const Context &context, Point2D p);
-void set_color(const Context &context, Color clr);
+void draw_model(Context &context, const Model &model);
+void draw_point(Context &context, Point2D p);
+void set_color(Context &context, Color clr);
 
-void draw_face(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
-void draw_face_upper(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
-void draw_face_lower(const Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face_upper(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face_lower(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
 
-std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3, const Point2D &p);
+std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3);
 
-void draw_line(const Context &context, Line l, Color color);
+void draw_line(Context &context, Line l, Color color);
 
 #endif

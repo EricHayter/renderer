@@ -1,3 +1,4 @@
+#include <SDL2/SDL_render.h>
 #include <iostream>
 #include "model.h"
 #include "renderer.h"
@@ -34,17 +35,17 @@ int main(int argc, char** argv)
 	};
 	for (auto i = 0; i < context.zbuffer.size(); i++) {
 		for (auto j = 0; j < context.zbuffer[i].size(); j++) {
-			context.zbuffer[i][j] = 0;	
+			context.zbuffer[i][j] = -std::numeric_limits<float>::max();
 		}	
 	}
     
-    SDL_RenderClear(renderer);
+    SDL_RenderClear(context.sdl_renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     Model model{ "head.obj" };    
 	draw_model(context, model);
 
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(context.sdl_renderer);
 
     SDL_Delay(3000);
     SDL_DestroyWindow(window);
