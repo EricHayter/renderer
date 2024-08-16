@@ -106,7 +106,7 @@ void draw_face_upper(Context &context, Vertex v1, Vertex v2, Vertex v3, Color co
 		pointer3 += s3;
 		for (int x = pointer2; x <= pointer3; x++) {
 			float z{ solFunc({x, y}) };
-			if (z <= context.zbuffer[x][y]) {
+			if (z >= context.zbuffer[x][y]) {
 				draw_point(context, {x, y});	
 				context.zbuffer[x][y] = z;
 			}
@@ -134,7 +134,7 @@ void draw_face_lower(Context &context, Vertex v1, Vertex v2, Vertex v3, Color co
 		pointerr += sr;	
 		for (int x = pointerl; x <= pointerr; x++) { 
 			float z{ solFunc({x, y}) };
-			if (z <= context.zbuffer[x][y]) {
+			if (z >= context.zbuffer[x][y]) {
 				draw_point(context, {x, y});	
 				context.zbuffer[x][y] = z;
 			}

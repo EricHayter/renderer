@@ -40,10 +40,12 @@ int main(int argc, char** argv)
 	}
     
     SDL_RenderClear(context.sdl_renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     Model model{ "head.obj" };    
 	draw_model(context, model);
+
+    SDL_SetRenderDrawColor(context.sdl_renderer, 255, 0, 0, 255);
+	draw_point(context, {50, 50});
 
     SDL_RenderPresent(context.sdl_renderer);
 
