@@ -17,7 +17,7 @@ typedef struct {
 
 void set_color(SDL_Renderer *renderer, Color color);
 
-typedef Vertex Vector3D;
+typedef Vector3D Vertex;
 
 typedef struct Point2D_t {
 	int x;

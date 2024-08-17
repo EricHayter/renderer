@@ -161,34 +161,3 @@ std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const 
 		return (-a * (p.x - x0) - b * (p.y - y0))/c + z0;
 	};
 }
-
-
-
-void draw_line(Context& context, Line l, Color color)
-{
-	set_color(context, color);
-	Point2D to{ l.to };
-	Point2D from{ l.from };
-    int y {};
-    bool is_steep {false};
-    if (std::abs(from.y - to.y) > std::abs(from.x - to.x)) { // transpose if we have a steep line
-        std::swap(from.x, from.y);
-        std::swap(to.x, to.y);
-        is_steep = true;
-    }
-
-    if (to.x < from.x) { // make sure direction doesn´t effect render
-        std::swap(to.x, from.x);
-		std::swap(from.y, to.y);
-    }
-
-    for (int x = from.x; x <= to.x; x++) {
-        float t {static_cast<float>(x - from.x)/(to.x - from.x)};
-        y = from.y + (to.y - from.y) * t;
-        if (is_steep) {
-            draw_point(context, {y, x});
-        } else {
-			draw_point(context, {x, y});
-        }
-    }
-}
