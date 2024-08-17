@@ -4,6 +4,7 @@
 #include "model.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_video.h>
 #include <cstdint>
 #include <array>
 #include <functional>
@@ -14,8 +15,6 @@
 typedef struct {
     uint8_t r, g, b, a;
 } Color;
-
-void set_color(SDL_Renderer *renderer, Color color);
 
 typedef Vector3D Vertex;
 
@@ -29,23 +28,29 @@ typedef struct Line_t {
     Point2D from; 
 } Line;
 
-typedef struct Context_t {
+typedef struct Renderer_t {
 	SDL_Renderer *sdl_renderer;
+	SDL_Window *window;
 	Vector3D light_dir;
 	std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
-} Context;
+
+	Renderer_t();
+	~Renderer_t();
+} Renderer;
 
 Vertex scale_vertex(const Vertex &v);
-void draw_model(Context &context, const Model &model);
-void draw_point(Context &context, Point2D p);
-void set_color(Context &context, Color clr);
 
-void draw_face(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
-void draw_face_upper(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
-void draw_face_lower(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color);
+void clear_screen(Renderer &renderer);
+void set_color(Renderer &renderer, Color clr);
+void draw_point(Renderer &renderer, Point2D p);
+
+void draw_model(Renderer &renderer, const Model &model);
+void draw_face(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face_upper(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face_lower(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color);
 
 std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3);
 
-void draw_line(Context &context, Line l, Color color);
+void draw_line(Renderer &renderer, Line l, Color color);
 
 #endif
