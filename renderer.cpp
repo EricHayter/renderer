@@ -15,8 +15,19 @@ Vertex scale_vertex(const Vertex &v)
 				v.z};
 }
 
-<<<<<<< HEAD
-Vertex project_vertex(const Vertex &v)
+Matrix4 get_retro_proj_matrix(const Renderer &renderer)
+{
+	return {
+		{
+			{1, 0, 0, 0},		 	
+			{0, 1, 0, 0},		 	
+			{0, 0, 1, 0},		 	
+			{0, 0, -1/ren, 1},		 	
+		}
+	};
+}
+
+Vertex project_vertex(const Renderer &renderer, const Vertex &v)
 {
 	Vector4D vh{ homogenize_vec3d(v) };
 
@@ -28,13 +39,10 @@ Vertex project_vertex(const Vertex &v)
 	return dehomogenize_vec4d(vh);
 }
 
-void draw_point(Context& context, Point2D p)
-=======
 // let's make a constructor for the renderer here
 Renderer::Renderer_t() :
 	zbuffer{},
 	light_dir{ 0,  0, -1 }
->>>>>>> 74b81bec05ac77467847e2fece633697109f849e
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
