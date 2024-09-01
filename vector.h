@@ -3,31 +3,23 @@
 
 #include <array>
 
-typedef struct Vector3D_t {
-    float x;
-    float y;
-    float z;
-} Vector3D;
+template <int rows, int cols>
+struct Matrix {
+	std::array<std::array<float, cols>, rows> m;
 
-typedef struct Vector4D_t {
-	float x;
-	float y;
-	float z;
-	float w;
-} Vector4D;
+	template<int orows, int ocols>
+	Matrix operator* (const Matrix<orows, ocols>& m);	
+};
 
-// 4 x 4 matrix
-typedef std::array<Vector4D_t, 4> Matrix4;
-
-Vector3D operator+(const Vector3D &v1, const Vector3D &v2);
-Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
-Vector3D normalize(const Vector3D& vec);
-float dot_product(const Vector3D& v1, const Vector3D& v2);
-Vector3D cross_product(const Vector3D& v1, const Vector3D& v2);
-
-Vector4D homogenize_vec3d(const Vector3D& vec);
-Vector3D dehomogenize_vec4d(const Vector4D& vec);
-float dot_product(const Vector4D &vec1, const Vector4D &vec2);
-Vector4D matrix_mult(const Matrix4 &mat, const Vector4D &vec);
+template<int len>
+struct Vector : Matrix<len, 1> {
+	Vector operator+(const Vector &v);
+	Vector operator-(const Vector &v);
+	float dot_product(const Vector& v);
+	Vector<3> cross_product(const Vector<3>& v);
+	Vector normalize();
+	Vector homogenize();
+	Vector dehomogenize();
+};
 
 #endif
