@@ -1,82 +1,115 @@
 #include "vector.h"
 #include <cmath>
 
-// =============================================================
-// 3D VECTOR FUNCTIONS (for points and simple direction vectors)
-// =============================================================
-float dot_product(const Vector3D& v1, const Vector3D& v2)
+// make it simpler for accessing indexes
+// I couldn't get typedefs to work so the wrapper class is pretty baron
+template<size_t rows, size_t cols>
+std::array<float, cols> Matrix<rows, cols>::operator[](size_t i)
 {
-	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+	if (i < 0 || i >= rows)
+		throw "Illegal index!";
+	return m[i];
 }
 
-Vector3D cross_product(const Vector3D& v1, const Vector3D& v2)
+// perform matrix multiplication with a matrix to the right
+template<size_t i, size_t j>
+template<size_t k>
+Matrix<i, k> Matrix<i, j>::operator* (const Matrix<j, k> &m)
 {
-	Vector3D v{};
-	v.x = v1.y * v2.z - v1.z * v2.y;
-	v.y = v1.z * v2.x - v1.x * v2.z;
-	v.z = v1.x * v2.y - v1.y * v2.x;
-	return v;
+	Matrix<i, k> product;	
+	for (size_t row = 0; row < i; row++) {
+		for (size_t col = 0; col < k; col++) {
+			product[row][col] = 0;
+			for (size_t h = 0; h < j; h++)
+				product[row][col] += this[row][h] * m[h][col];
+		}
+	}
+	return product;
 }
 
-Vector3D operator+(const Vector3D &v1, const Vector3D &v2)
+template<size_t len>
+float& Vector<len>::operator[](size_t i)
 {
-	return {
-		v1.x + v2.x,
-		v1.y + v2.y,
-		v1.z + v2.z
-	};
+	if (i < 0 || i >= len)
+		throw "Illegal index!";
+	return this[i][0];
 }
 
-Vector3D operator-(const Vector3D &v1, const Vector3D &v2)
+template<size_t len>
+const float& Vector<len>::operator[](size_t i) const
 {
-	return {
-		v1.x - v2.x,
-		v1.y - v2.y,
-		v1.z - v2.z
-	};
+	if (i < 0 || i >= len)
+		throw "Illegal index!";
+	return this[i][0];
 }
 
-Vector3D normalize(const Vector3D& vec)
+Vector<3> cross_product(const Vector<3> &v1, const Vector<3> &v2)
 {
-	float magn = sqrt(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z);
-	return { vec.x/magn, vec.y/magn, vec.z/magn };
+	Vector<3> nv{};
+	nv[X] = v1[Y] * v2[Z] - v1[Z] * v2[Y];
+	nv[Y] = v1[Z] * v2[X] - v1[X] * v2[Z];
+	nv[Z] = v1[X] * v2[Y] - v1[Y] * v2[X];
+	return nv;
 }
 
-// ============================================================================
-// 4D VECTOR FUNCTIONS (for math related to the projections)
-// ============================================================================
-
-// 4D vectors are used as 3D vectors are homogonized so that affine 
-// transformations can be performed using basic matrix multiplication 
-// as opposed to using vector addition for shifts of vectors.
-
-Vector4D homogenize_vec3d(const Vector3D& vec)
+template<size_t len>
+Vector<len> operator+(const Vector<len> &v1, const Vector<len> &v2)
 {
-	return { vec.x, vec.y, vec.z, 1.0f };
+	Vector<len> nv{};
+	for (size_t i = 0; i < len; i++)
+		nv[i] = v1[i] + v2[i];
+	return nv;
 }
 
-Vector3D dehomogenize_vec4d(const Vector4D& vec)
+template<size_t len>
+Vector<len> operator-(const Vector<len> &v1, const Vector<len> &v2)
 {
-	// vec is a vector and not a point in this case
-	if (vec.w == 0)
-		return { vec.x, vec.y, vec.z };
-	return { vec.x / vec.w, vec.y / vec.w, vec.z / vec.w };
+	Vector<len> nv{};
+	for (size_t i = 0; i < len; i++)
+		nv[i] = v1[i] - v2[i];
+	return nv;
 }
 
-float dot_product(const Vector4D &vec1, const Vector4D &vec2)
+template<size_t len>
+Vector<len> normalize(const Vector<len> &vec)
 {
-	return vec1.x * vec2.x +
-			vec1.y * vec2.y +
-			vec1.z * vec2.z +
-			vec1.w * vec2.w;
+	float magn{};
+	Vector<len> nv{};
+	for (size_t i = 0; i < len; i++) {
+		nv[i] = vec[i];
+		magn += vec[i] * vec[i];
+	}
+	if (magn == 0)
+		throw "Cannot normalize zero vector!";
+	magn = sqrt(magn);
+	for (size_t i = 0; i < len; i++)
+		nv[i] /= magn;
+	return nv;
 }
 
-Vector4D matrix_mult(const Matrix4 &mat, const Vector4D &vec)
+template<size_t len>
+Vector<len + 1> Vector<len>::homogenize()
 {
-	return {
-		dot_product(mat[0], vec),	
-		dot_product(mat[1], vec),	
-		dot_product(mat[2], vec),	
-		dot_product(mat[3], vec)
-	};
+	Vector<len + 1> nv{};
+	for (size_t i = 0; i < len; i++)
+		nv[i] = this[i];
+	return nv;
 }
+
+template<size_t len>
+Vector<len - 1> Vector<len>::dehomogenize()
+{
+	if (len == 1)
+		throw "Cannot dehomogenize single-length vector!";
+	Vector<len - 1> nv{};
+	for (size_t i = 0; i < len - 1; i++)
+		nv[i] = this[i];
+
+	if (this[len - 1] == 0) // no need to divide if it's a vector and not a point
+		return nv;
+
+	for (size_t i = 0; i < len - 1; i++) // divide by added coordinate
+		nv[i] /= this[len - 1];	
+	return nv;
+}
+
