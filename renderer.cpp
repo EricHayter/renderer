@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "vector.h"
 #include "model.h"
+#include <SDL2/SDL_render.h>
 #include <algorithm>
 #include <functional>
 #include <limits>
@@ -14,6 +15,7 @@ Vertex scale_vertex(const Vertex &v)
 				v.z};
 }
 
+<<<<<<< HEAD
 Vertex project_vertex(const Vertex &v)
 {
 	Vector4D vh{ homogenize_vec3d(v) };
@@ -27,13 +29,64 @@ Vertex project_vertex(const Vertex &v)
 }
 
 void draw_point(Context& context, Point2D p)
+=======
+// let's make a constructor for the renderer here
+Renderer::Renderer_t() :
+	zbuffer{},
+	light_dir{ 0,  0, -1 }
+>>>>>>> 74b81bec05ac77467847e2fece633697109f849e
 {
-	SDL_RenderDrawPoint(context.sdl_renderer, p.x, p.y);
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
+        exit(-1);
+    }
+
+    window = SDL_CreateWindow(
+            "renderer",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            SCREEN_WIDTH, SCREEN_HEIGHT,
+            SDL_WINDOW_SHOWN
+            );
+
+    if (window == NULL) {
+        fprintf(stderr, "could not create window: %s\n", SDL_GetError());
+        exit(-1);
+    }
+    
+	sdl_renderer = SDL_CreateRenderer(window, -1, 0);
+
+	// set the 
+	for (auto i = 0; i < zbuffer.size(); i++) {
+		for (auto j = 0; j < zbuffer[i].size(); j++) {
+			zbuffer[i][j] = -std::numeric_limits<float>::max();
+		}	
+	}
 }
 
-void set_color(Context &context, Color clr)
+Renderer::~Renderer_t() {
+    SDL_DestroyWindow(window);
+}
+
+// make a function to clear the screen (don't forget about zbuffer too)
+void clear_screen(Renderer &renderer)
 {
-    SDL_SetRenderDrawColor(context.sdl_renderer, 
+	set_color(renderer, {0, 0, 0, 255});
+	SDL_RenderClear(renderer.sdl_renderer);
+	for (auto i = 0; i < renderer.zbuffer.size(); i++) {
+		for (auto j = 0; j < renderer.zbuffer[i].size(); j++) {
+			renderer.zbuffer[i][j] = -std::numeric_limits<float>::max();
+		}	
+	}
+}
+
+void draw_point(Renderer& renderer, Point2D p)
+{
+	SDL_RenderDrawPoint(renderer.sdl_renderer, p.x, p.y);
+}
+
+void set_color(Renderer &renderer, Color clr)
+{
+    SDL_SetRenderDrawColor(renderer.sdl_renderer, 
             clr.r,
             clr.g,
             clr.b,
@@ -42,7 +95,7 @@ void set_color(Context &context, Color clr)
 
 // this is just a POC I'll be editting the values of the vertices in this
 // function (will edit to remove this feature later)
-void draw_model(Context &context, const Model &model)
+void draw_model(Renderer &renderer, const Model &model)
 {
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
@@ -63,7 +116,7 @@ void draw_model(Context &context, const Model &model)
 			Vertex v2n{ scale_vertex(v2) };
 			Vertex v3n{ scale_vertex(v3) };
 			if (intensity > 0)
-				draw_face(context, v1n, v2n, v3n, 
+				draw_face(renderer, v1n, v2n, v3n, 
 						{(uint8_t)(255 * intensity), 
 						 (uint8_t)(255 * intensity), 
 						 (uint8_t)(255 * intensity),
@@ -73,9 +126,9 @@ void draw_model(Context &context, const Model &model)
 	}
 }
 
-void draw_face(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
+void draw_face(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
-	set_color(context, color);
+	set_color(renderer, color);
 	if (v1.y < v2.y)
 		std::swap(v1, v2);
 	if (v2.y < v3.y)
@@ -93,11 +146,11 @@ void draw_face(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
 	float z{ (v3.z - v1.z)*t + v3.z };
 
 	Vertex vt{ x, y, z};
-	draw_face_upper(context, v1, v2, vt, color);
-	draw_face_lower(context, vt, v2, v3, color);
+	draw_face_upper(renderer, v1, v2, vt, color);
+	draw_face_lower(renderer, vt, v2, v3, color);
 }
 
-void draw_face_upper(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
+void draw_face_upper(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
 	if (v1.y == v2.y) { // this triangle is pointing down
 		return;
@@ -118,15 +171,15 @@ void draw_face_upper(Context &context, Vertex v1, Vertex v2, Vertex v3, Color co
 		pointer3 += s3;
 		for (int x = pointer2; x <= pointer3; x++) {
 			float z{ solFunc({x, y}) };
-			if (z >= context.zbuffer[x][y]) {
-				draw_point(context, {x, y});	
-				context.zbuffer[x][y] = z;
+			if (z >= renderer.zbuffer[x][y]) {
+				draw_point(renderer, {x, y});	
+				renderer.zbuffer[x][y] = z;
 			}
 		}
 	}
 }
 
-void draw_face_lower(Context &context, Vertex v1, Vertex v2, Vertex v3, Color color)
+void draw_face_lower(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color)
 {
 	if (v2.y == v3.y) {
 		return;
@@ -146,9 +199,9 @@ void draw_face_lower(Context &context, Vertex v1, Vertex v2, Vertex v3, Color co
 		pointerr += sr;	
 		for (int x = pointerl; x <= pointerr; x++) { 
 			float z{ solFunc({x, y}) };
-			if (z >= context.zbuffer[x][y]) {
-				draw_point(context, {x, y});	
-				context.zbuffer[x][y] = z;
+			if (z >= renderer.zbuffer[x][y]) {
+				draw_point(renderer, {x, y});	
+				renderer.zbuffer[x][y] = z;
 			}
 		}
 	}
