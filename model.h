@@ -1,7 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "vector3d.h"
+#include "vector.h"
 #include <vector>
 #include <string>
 

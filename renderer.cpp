@@ -1,5 +1,5 @@
 #include "renderer.h"
-#include "vector3d.h"
+#include "vector.h"
 #include "model.h"
 #include <algorithm>
 #include <functional>
@@ -12,6 +12,18 @@ Vertex scale_vertex(const Vertex &v)
 	return { 	(v.x + 1.0f) * SCREEN_WIDTH / 2, 
 				(-v.y + 1.0f) * SCREEN_HEIGHT / 2,
 				v.z};
+}
+
+Vertex project_vertex(const Vertex &v)
+{
+	Vector4D vh{ homogenize_vec3d(v) };
+
+	// where should I pass in the transformation matrix???
+	
+	// make it ourselves or should I base it on the context structure?
+	//
+
+	return dehomogenize_vec4d(vh);
 }
 
 void draw_point(Context& context, Point2D p)
@@ -142,8 +154,8 @@ void draw_face_lower(Context &context, Vertex v1, Vertex v2, Vertex v3, Color co
 	}
 }
 
-// given a point (X, Y) and 3 points to define a plane what is the solution for (X, Y)
-// in the plane?
+// given 3 points to define a plane return a function for solutions of 
+// Z given some X, Y.
 std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3)
 {
 	Vector3D normal{ cross_product(v3 - v1, v2 - v1) };
