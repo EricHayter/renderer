@@ -5,8 +5,6 @@
 #include <vector>
 #include <string>
 
-typedef Vector3D Vertex;
-
 typedef struct TextureCoord_t {
 	float u;
 	float v;
@@ -85,18 +83,18 @@ typedef struct FaceTuple_t {
 class Model 
 {
 private:
-    std::vector<Vertex> verticies;
+    std::vector<Vector<3>> verticies;
 	std::vector<std::vector<FaceTuple>> faces;
 public:
     Model(std::string filename);
 	int nfaces() const;
-	Vertex vertex(int i) const;
+	Vector<3> vertex(int i) const;
 	std::vector<FaceTuple> face(int i) const;
 };
 
 namespace ModelParsing
 {
-	Vertex parse_vertex(const std::string &line);
+	Vector<3> parse_vertex(const std::string &line);
 	std::vector<FaceTuple> parse_face(const std::string &line);
 	FaceTuple parse_face_tuple(const std::string &line);
 	std::vector<std::string> split_string(const std::string &str);

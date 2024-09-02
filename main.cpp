@@ -12,7 +12,6 @@ int main(int argc, char** argv)
 	Renderer renderer{};
 	draw_model(renderer, model);
 
-
     SDL_RenderPresent(renderer.sdl_renderer);
 
     SDL_Delay(3000);

@@ -16,41 +16,31 @@ typedef struct {
     uint8_t r, g, b, a;
 } Color;
 
-typedef Vector3D Vertex;
-
-typedef struct Point2D_t {
-	int x;
-	int y;
+typedef struct Point2D {
+	int x, y;
 } Point2D;
-
-typedef struct Line_t {
-    Point2D to;
-    Point2D from; 
-} Line;
 
 typedef struct Renderer_t {
 	SDL_Renderer *sdl_renderer;
 	SDL_Window *window;
-	Vector3D light_dir;
+	Vector<3> light_dir;
 	std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
 
 	Renderer_t();
 	~Renderer_t();
 } Renderer;
 
-Vertex scale_vertex(const Vertex &v);
+Vector<3> scale_vertex(const Vector<3> &v);
 
 void clear_screen(Renderer &renderer);
 void set_color(Renderer &renderer, Color clr);
 void draw_point(Renderer &renderer, Point2D p);
 
 void draw_model(Renderer &renderer, const Model &model);
-void draw_face(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color);
-void draw_face_upper(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color);
-void draw_face_lower(Renderer &renderer, Vertex v1, Vertex v2, Vertex v3, Color color);
+void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color);
+void draw_face_upper(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color);
+void draw_face_lower(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color);
 
-std::function<float (const Point2D&)> findPlaneSolution(const Vertex &v1, const Vertex &v2, const Vertex &v3);
-
-void draw_line(Renderer &renderer, Line l, Color color);
+std::function<float (const Point2D&)> findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3);
 
 #endif
