@@ -20,21 +20,21 @@ struct Matrix {
 		static_assert(rows > 0 && cols > 0, "row and col count must be positive!");
 	}
 
-	Matrix(const std::array<std::array<float, cols>, rows> &m) : m{m}
+	Matrix(const std::array<std::array<float, cols>, rows> &d) : m{d}
    	{
 		static_assert(rows > 0 && cols > 0, "row and col count must be positive!");
 	};
 
 	// Matrix multiplication
 	template<size_t k>
-	Matrix<rows, k> operator* (const Matrix<cols, k> &m)
+	Matrix<rows, k> operator*(const Matrix<cols, k> &m)
 	{
 		Matrix<rows, k> product;	
 		for (size_t row = 0; row < rows; row++) {
 			for (size_t col = 0; col < k; col++) {
 				product[row][col] = 0;
 				for (size_t h = 0; h < cols; h++)
-					product[row][col] += this[row][h] * m[h][col];
+					product[row][col] += (*this)[row][h] * m[h][col];
 			}
 		}
 		return product;
@@ -58,15 +58,20 @@ struct Matrix {
 template<size_t len>
 struct Vector : public Matrix<len, 1> {
 	// Constructors
-	Vector<len>() : Matrix<len, 1>{} {};
-	Vector<len>(const std::array<float, len> &v) : Matrix<len, 1>{{v}} {};
+	Vector() : Matrix<len, 1>{} {};
+	Vector(const std::array<float, len> &v) 
+		: Matrix<len, 1>{}
+	{ // is this a better way to do this? (I just using the matrix constructor to no avail :()
+		for (size_t i = 0; i < len; i++)
+			this->m[i] = v[i];
+	};
 
 	// Arithmetic operator overloading
 	Vector<len> operator+(const Vector<len> &v) const
 	{
 		Vector<len> nv{};
 		for (size_t i = 0; i < len; i++)
-			nv[i] = this[i] + v[i];
+			nv[i] = (*this)[i] + v[i];
 		return nv;
 	}
 
@@ -74,32 +79,28 @@ struct Vector : public Matrix<len, 1> {
 	{
 		Vector<len> nv{};
 		for (size_t i = 0; i < len; i++)
-			nv[i] = this[i] - v[i];
+			nv[i] = (*this)[i] - v[i];
 		return nv;
 	}
 
 	// Subscript operator overloading
 	const float& operator[](size_t i) const
 	{
-		if (i < 0 || i >= len)
-			throw "Illegal index!";
-		return this[i][0];
+		return this->m[i][0];
 	}
 
 	float& operator[](size_t i)
 	{
-		if (i < 0 || i >= len)
-			throw "Illegal index!";
-		return this[i][0];
+		return this->m[i][0];
 	}
 
-	Vector<len> normalize(const Vector<len> &vec) const
+	Vector<len> normalize() const
 	{
 		float magn{};
 		Vector<len> nv{};
 		for (size_t i = 0; i < len; i++) {
-			nv[i] = vec[i];
-			magn += vec[i] * vec[i];
+			nv[i] = (*this)[i];
+			magn += (*this)[i] * (*this)[i];
 		}
 		if (magn == 0)
 			throw "Cannot normalize zero vector!";
@@ -113,7 +114,7 @@ struct Vector : public Matrix<len, 1> {
 	{
 		Vector<len + 1> nv{};
 		for (size_t i = 0; i < len; i++)
-			nv[i] = this[i];
+			nv[i] = 1.0f; // (*this)[i];
 		return nv;
 	}
 
@@ -125,15 +126,15 @@ struct Vector : public Matrix<len, 1> {
 		// copy len - 1 values into new point
 		Vector<len - 1> nv{};
 		for (size_t i = 0; i < len - 1; i++)
-			nv[i] = this[i];
+			nv[i] = (*this)[i];
 
 		// check if it is a "vector" and not a point
-		if (this[len - 1] == 0) // no need to divide if it's a vector and not a point
+		if ((*this)[len - 1] == 0) // no need to divide if it's a vector and not a point
 			return nv;
 
 		// normalize remaining coordinates
 		for (size_t i = 0; i < len - 1; i++) // divide by added coordinate
-			nv[i] /= this[len - 1];	
+			nv[i] /= (*this)[len - 1];	
 
 		return nv;
 	}
