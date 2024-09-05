@@ -18,32 +18,22 @@ Vector<3> scale_vertex(const Vector<3> &v)
 	}};
 }
 
-Matrix<4, 4> get_retro_proj_matrix(const Renderer &renderer)
+Vector<3> project_vertex(const Matrix<4, 4> &pm, const Vector<3> &v)
 {
-	return { // this is a lot of curly braces
-			{1.f, 0.f, 0.f, 0.f},		 	
-			{0.f, 1.f, 0.f, 0.f},		 	
-			{0.f, 0.f, 1.f, 0.f},		 	
-			{0.f, 0.f, -1/7.f, 1.f}
-	};
-}
-
-Vector<3> project_vertex(const Renderer &renderer, const Vector<3> &v)
-{
-	Vector<4> vh{ v.homogenize() };
+	// is this function even worth it to have?
+	Matrix<4, 1> vh{ v.homogenize() };
 
 	// where should I pass in the transformation matrix???
-	
-	// make it ourselves or should I base it on the context structure?
-	//
+	vh = pm * vh;	
 
 	return vh.dehomogenize();
 }
 
 // let's make a constructor for the renderer here
-Renderer::Renderer_t() :
+Renderer::Renderer() :
 	zbuffer{},
-	light_dir{{ 0,  0, -1 }}
+	light_dir{{ 0,  0, -1 }},
+	pos{0, 0, -4} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -72,7 +62,7 @@ Renderer::Renderer_t() :
 	}
 }
 
-Renderer::~Renderer_t() {
+Renderer::~Renderer() {
     SDL_DestroyWindow(window);
 }
 
@@ -106,6 +96,15 @@ void set_color(Renderer &renderer, Color clr)
 // function (will edit to remove this feature later)
 void draw_model(Renderer &renderer, const Model &model)
 {
+	// let's create our transformation matrix here
+	Matrix<4, 4> tm{
+		{1.f, 0.f, 0.f, 0.f},		 	
+		{0.f, 1.f, 0.f, 0.f},		 	
+		{0.f, 0.f, 1.f, 0.f},		 	
+		{0.f, 0.f, -1/renderer.pos[Z], 1.f}
+	};
+
+
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
 		Vector<3> v1{ model.vertex(face[0].vertex - 1) };

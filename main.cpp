@@ -1,11 +1,6 @@
-#include <SDL2/SDL_render.h>
 #include <iostream>
 #include "model.h"
 #include "renderer.h"
-#include <SDL2/SDL.h>
-#include <limits>
-#include <algorithm>
-#include <array>
 
 int main(int argc, char** argv)
 {

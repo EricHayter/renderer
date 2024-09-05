@@ -36,7 +36,7 @@ struct Matrix {
 
 	// Matrix multiplication
 	template<size_t k>
-	Matrix<rows, k> operator*(const Matrix<cols, k> &m)
+	Matrix<rows, k> operator*(const Matrix<cols, k> &m) const
 	{
 		Matrix<rows, k> product;	
 		for (size_t row = 0; row < rows; row++) {
@@ -124,7 +124,8 @@ struct Vector : public Matrix<len, 1> {
 	{
 		Vector<len + 1> nv{};
 		for (size_t i = 0; i < len; i++)
-			nv[i] = 1.0f; // (*this)[i];
+			nv[i] = (*this)[i];
+		nv[len] = 1.f;
 		return nv;
 	}
 

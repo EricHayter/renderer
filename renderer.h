@@ -20,14 +20,15 @@ typedef struct Point2D {
 	int x, y;
 } Point2D;
 
-typedef struct Renderer_t {
+typedef struct Renderer {
 	SDL_Renderer *sdl_renderer;
 	SDL_Window *window;
 	Vector<3> light_dir;
+	Vector<3> pos;
 	std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
 
-	Renderer_t();
-	~Renderer_t();
+	Renderer();
+	~Renderer();
 } Renderer;
 
 Vector<3> scale_vertex(const Vector<3> &v);
