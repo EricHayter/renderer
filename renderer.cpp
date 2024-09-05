@@ -21,7 +21,7 @@ Vector<3> scale_vertex(const Vector<3> &v)
 Vector<3> project_vertex(const Matrix<4, 4> &pm, const Vector<3> &v)
 {
 	// is this function even worth it to have?
-	Matrix<4, 1> vh{ v.homogenize() };
+	Vector<4> vh{ v.homogenize() };
 
 	// where should I pass in the transformation matrix???
 	vh = pm * vh;	
@@ -129,7 +129,7 @@ void draw_model(Renderer &renderer, const Model &model)
 						 (uint8_t)(255 * intensity), 
 						 (uint8_t)(255 * intensity),
 						 255}
-						 );
+						);
 		}
 	}
 }

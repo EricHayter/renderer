@@ -68,6 +68,7 @@ template<size_t len>
 struct Vector : public Matrix<len, 1> {
 	// Constructors
 	Vector() : Matrix<len, 1>{} {};
+	Vector(const Matrix<len, 1> &m) : Matrix<len, 1>{} {};
 	Vector(std::initializer_list<float> v) 
 		: Matrix<len, 1>{} {
 			if (v.size() != len)
