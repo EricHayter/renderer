@@ -56,11 +56,11 @@ Vector<3> ModelParsing::parse_vertex(const std::string &line)
 {
 	// ignoring w entry for simplicity
 	std::vector<std::string> split_strs { ModelParsing::split_string(line) };
-	return {{
+	return {
 		std::stof(split_strs[1]),	// don't count 'v' char
 		std::stof(split_strs[2]),
 		std::stof(split_strs[3])
-	}};
+	};
 }
 
 std::vector<FaceTuple> ModelParsing::parse_face(const std::string &line)

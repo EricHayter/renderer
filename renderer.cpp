@@ -20,12 +20,12 @@ Vector<3> scale_vertex(const Vector<3> &v)
 
 Matrix<4, 4> get_retro_proj_matrix(const Renderer &renderer)
 {
-	return {{{ // this is a lot of curly braces
+	return { // this is a lot of curly braces
 			{1.f, 0.f, 0.f, 0.f},		 	
 			{0.f, 1.f, 0.f, 0.f},		 	
 			{0.f, 0.f, 1.f, 0.f},		 	
 			{0.f, 0.f, -1/7.f, 1.f}
-	}}};
+	};
 }
 
 Vector<3> project_vertex(const Renderer &renderer, const Vector<3> &v)

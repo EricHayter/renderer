@@ -9,21 +9,30 @@
 #define W 3
 
 #include <array>
+#include <algorithm>
+#include <initializer_list>
+#include <iostream>
 
 template<size_t rows, size_t cols>
 struct Matrix {
 	// just a wrapped for an array
 	std::array<std::array<float, cols>, rows> m;
 
-	Matrix() : m{}
-	{
-		static_assert(rows > 0 && cols > 0, "row and col count must be positive!");
-	}
+	Matrix() : m{} {}
 
-	Matrix(const std::array<std::array<float, cols>, rows> &d) : m{d}
+	Matrix(std::initializer_list<std::initializer_list<float>> v) 
+		: m{}
    	{
-		static_assert(rows > 0 && cols > 0, "row and col count must be positive!");
-	};
+		// do some size checking here to ensure gridlike initalizer list
+		if (v.size() != rows)
+			printf("Not enough parameters in initailzer_list!");
+		for (size_t i = 0; i < rows; i++) {
+			if (v.begin()[i].size() != cols)
+				printf("Not enough value in column");
+			for (size_t j = 0; j < cols; j++)
+				m[i][j] = v.begin()[i].begin()[j];	
+		}
+	}
 
 	// Matrix multiplication
 	template<size_t k>
@@ -59,12 +68,13 @@ template<size_t len>
 struct Vector : public Matrix<len, 1> {
 	// Constructors
 	Vector() : Matrix<len, 1>{} {};
-	Vector(const std::array<float, len> &v) 
-		: Matrix<len, 1>{}
-	{ // is this a better way to do this? (I just using the matrix constructor to no avail :()
-		for (size_t i = 0; i < len; i++)
-			this->m[i] = v[i];
-	};
+	Vector(std::initializer_list<float> v) 
+		: Matrix<len, 1>{} {
+			if (v.size() != len)
+				throw "Invalid number of arguments!";
+			for (size_t i = 0; i < v.size(); i++)
+				this->m[i][0] = v.begin()[i];	
+		};
 
 	// Arithmetic operator overloading
 	Vector<len> operator+(const Vector<len> &v) const
