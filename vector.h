@@ -38,10 +38,9 @@ struct Matrix {
 	template<size_t k>
 	Matrix<rows, k> operator*(const Matrix<cols, k> &m) const
 	{
-		Matrix<rows, k> product;	
+		Matrix<rows, k> product{};	
 		for (size_t row = 0; row < rows; row++) {
 			for (size_t col = 0; col < k; col++) {
-				product[row][col] = 0;
 				for (size_t h = 0; h < cols; h++)
 					product[row][col] += (*this)[row][h] * m[h][col];
 			}
@@ -49,14 +48,14 @@ struct Matrix {
 		return product;
 	}
 
-	const std::array<float, cols> operator[](size_t i) const
+	const std::array<float, cols>& operator[](size_t i) const
 	{
 		if (i < 0 || i >= rows)
 			throw "Illegal index!";
 		return m[i];
 	}
 
-	std::array<float, cols> operator[](size_t i)
+	std::array<float, cols>& operator[](size_t i)
 	{
 		if (i < 0 || i >= rows)
 			throw "Illegal index!";
@@ -64,11 +63,22 @@ struct Matrix {
 	}
 };
 
+template <size_t rows, size_t cols>
+std::ostream& operator<<(std::ostream& out, const Matrix<rows, cols> &m)
+{
+	for (size_t row = 0; row < rows; row++) {
+		for (size_t col = 0; col < cols; col++) {
+			out << m[row][col] << " ";	
+		}
+		out << "\n";
+	}
+	return out;
+}
+
 template<size_t len>
 struct Vector : public Matrix<len, 1> {
-	// Constructors
 	Vector() : Matrix<len, 1>{} {};
-	Vector(const Matrix<len, 1> &m) : Matrix<len, 1>{} {};
+	Vector(const Matrix<len, 1> &m) : Matrix<len, 1>{m} {};
 	Vector(std::initializer_list<float> v) 
 		: Matrix<len, 1>{} {
 			if (v.size() != len)

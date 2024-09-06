@@ -8,3 +8,4 @@ Vector<3> cross_product(const Vector<3> &v1, const Vector<3> &v2)
 	nv[Z] = v1[X] * v2[Y] - v1[Y] * v2[X];
 	return nv;
 }
+

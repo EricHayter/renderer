@@ -33,7 +33,7 @@ Vector<3> project_vertex(const Matrix<4, 4> &pm, const Vector<3> &v)
 Renderer::Renderer() :
 	zbuffer{},
 	light_dir{{ 0,  0, -1 }},
-	pos{0, 0, -4} // maybe tweak this value later
+	pos{0, 0, -1} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -98,21 +98,24 @@ void draw_model(Renderer &renderer, const Model &model)
 {
 	// let's create our transformation matrix here
 	Matrix<4, 4> tm{
-		{1.f, 0.f, 0.f, 0.f},		 	
-		{0.f, 1.f, 0.f, 0.f},		 	
+		{1.f, 0.f, 0.f, renderer.pos[X]},		 	
+		{0.f, 1.f, 0.f, renderer.pos[Y]},		 	
 		{0.f, 0.f, 1.f, 0.f},		 	
-		{0.f, 0.f, -1/renderer.pos[Z], 1.f}
+		{0.f, 0.f, 1/renderer.pos[Z], 1.f}
 	};
 
 
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
-		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
+		Vector<3> v1{ project_vertex(tm, model.vertex(face[0].vertex - 1)) };
+		//Vector<3> v1{ model.vertex(face[0].vertex - 1) };
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
-			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
-			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
+			Vector<3> v2{ project_vertex(tm, model.vertex(face[j-1].vertex - 1)) };
+			//Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
+			Vector<3> v3{ project_vertex(tm, model.vertex(face[j].vertex - 1)) };
+			//Vector<3> v3{ model.vertex(face[j].vertex - 1) };
 
 			// find the normal of vectors from v1 to v2 and v1 to v3
 			Vector<3> normal{ cross_product(v3 - v1, v2 - v1).normalize() };
@@ -175,9 +178,13 @@ void draw_face_upper(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v
 	float pointer3{ (float)v3[X] - s3 };
 
 	for (int y = v2[Y]; y <= v1[Y]; y++) {
+		if (y < 0 || y >= SCREEN_HEIGHT)
+			continue;
 		pointer2 += s2;
 		pointer3 += s3;
 		for (int x = pointer2; x <= pointer3; x++) {
+			if (x < 0 || x >= SCREEN_WIDTH)
+				continue;
 			float z{ solFunc({x, y}) };
 			if (z >= renderer.zbuffer[x][y]) {
 				draw_point(renderer, {x, y});	
@@ -203,9 +210,13 @@ void draw_face_lower(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v
 	float pointerl{ (float)v3[X] - sl };
 	float pointerr{ (float)v3[X] - sr};
 	for (int y = v3[Y]; y <= v2[Y]; y++) {
+		if (y < 0 || y >= SCREEN_HEIGHT)
+			continue;
 		pointerl += sl;
 		pointerr += sr;	
 		for (int x = pointerl; x <= pointerr; x++) { 
+			if (x < 0 || x >= SCREEN_WIDTH)
+				continue;
 			float z{ solFunc({x, y}) };
 			if (z >= renderer.zbuffer[x][y]) {
 				draw_point(renderer, {x, y});	
