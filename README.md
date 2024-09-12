@@ -17,4 +17,4 @@ To run the program simply run `main` with an optional argument of a supplied
 
 As this program requires the use of SDL users must install the required packages
 in order to build. For instructions on installing the dependencies look at the 
-(SDL wiki)[https://wiki.libsdl.org/SDL2/Installation].
+[SDL wiki](https://wiki.libsdl.org/SDL2/Installation).
