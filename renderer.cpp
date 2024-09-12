@@ -33,7 +33,7 @@ Vector<3> project_vertex(const Matrix<4, 4> &pm, const Vector<3> &v)
 Renderer::Renderer() :
 	zbuffer{},
 	light_dir{{ 0,  0, -1 }},
-	pos{0, 0, -1} // maybe tweak this value later
+	pos{0, 0, -4} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());

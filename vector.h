@@ -124,7 +124,7 @@ struct Vector : public Matrix<len, 1> {
 			magn += (*this)[i] * (*this)[i];
 		}
 		if (magn == 0)
-			throw "Cannot normalize zero vector!";
+			return *this;
 		magn = sqrt(magn);
 		for (size_t i = 0; i < len; i++)
 			nv[i] /= magn;
