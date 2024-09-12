@@ -1,26 +1,38 @@
-CC = g++ -std=c++17
+# Compiler and Flags
+CC = g++
+CXXFLAGS = -std=c++17
+LDFLAGS = -lSDL2
+
+# Output file
 OUT_FILE = ./main
 
-all: output
+# Common flags for release and debug
+RELEASE_FLAGS = -O3
+DEBUG_FLAGS = -DEBUG -g3
 
+# Sources and object files
+SOURCES = main.cpp model.cpp renderer.cpp vector.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Default target
+all: $(OUT_FILE)
+
+# Clean target
 clean:
-	rm *.o
-	rm $(OUT_FILE)
+	rm -f *.o $(OUT_FILE)
 
-debug: CC += -DEBUG -g3
-debug: output
+# Debug target
+debug: CXXFLAGS += $(DEBUG_FLAGS)
+debug: $(OUT_FILE)
 
-output: main.o model.o renderer.o vector.o
-	$(CC) main.o model.o renderer.o vector.o -o $(OUT_FILE) -lSDL2
+# Output target
+$(OUT_FILE): $(OBJECTS)
+	$(CC) $(OBJECTS) -o $(OUT_FILE) $(LDFLAGS) $(RELEASE_FLAGS)
 
-main.o: main.cpp
-	$(CC) -c main.cpp
+# Object file rules
+%.o: %.cpp
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
-model.o: model.cpp
-	$(CC) -c model.cpp
-
-renderer.o: renderer.cpp
-	$(CC) -c renderer.cpp
-
-vector.o: vector.cpp
-	$(CC) -c vector.cpp
+# Implicit rule for release build with optimization
+release: CXXFLAGS += $(RELEASE_FLAGS)
+release: $(OUT_FILE)

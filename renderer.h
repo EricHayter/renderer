@@ -11,6 +11,7 @@
 
 #define SCREEN_WIDTH 900 // 640
 #define SCREEN_HEIGHT 900 // 480
+#define DEPTH 255
 
 typedef struct {
     uint8_t r, g, b, a;

@@ -104,30 +104,42 @@ void draw_model(Renderer &renderer, const Model &model)
 		{0.f, 0.f, 1/renderer.pos[Z], 1.f}
 	};
 
+	Matrix<4, 4> sm{
+		{ SCREEN_WIDTH*1/2.f, 0, 0, SCREEN_WIDTH/2.f },
+		{ 0, -SCREEN_HEIGHT*1/2.f, 0, SCREEN_HEIGHT/2.f},
+		{ 0, 0, DEPTH*3/4.f, DEPTH/2.f},
+		{ 0, 0, 0, 1.f }
+	};
+
+	Matrix<4, 4> cm{ sm * tm};
+
 
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
-		Vector<3> v1{ project_vertex(tm, model.vertex(face[0].vertex - 1)) };
-		//Vector<3> v1{ model.vertex(face[0].vertex - 1) };
+		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
+		Vector<3> v1s{static_cast<Vector<4>>(cm * v1.homogenize()).dehomogenize()};
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
-			Vector<3> v2{ project_vertex(tm, model.vertex(face[j-1].vertex - 1)) };
-			//Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
-			Vector<3> v3{ project_vertex(tm, model.vertex(face[j].vertex - 1)) };
-			//Vector<3> v3{ model.vertex(face[j].vertex - 1) };
-
+			//Vector<3> v2{ project_vertex(tm, model.vertex(face[j-1].vertex - 1)) };
+			//Vector<3> v3{ project_vertex(tm, model.vertex(face[j].vertex - 1)) };
+			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
+			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
+			
 			// find the normal of vectors from v1 to v2 and v1 to v3
 			Vector<3> normal{ cross_product(v3 - v1, v2 - v1).normalize() };
+			float intensity{ dot_product(normal, light_dir) };
 
+			// transform vectors for screen
+			Vector<3> v2s{static_cast<Vector<4>>(cm * v2.homogenize()).dehomogenize()};
+			Vector<3> v3s{static_cast<Vector<4>>(cm * v3.homogenize()).dehomogenize()};
+
+			
+			
 			// intensity of light reflected will be equal to dot product of 
 			// view vector and normal of face
-			float intensity{ dot_product(normal, light_dir) };
-			Vector<3> v1n{ scale_vertex(v1) };
-			Vector<3> v2n{ scale_vertex(v2) };
-			Vector<3> v3n{ scale_vertex(v3) };
 			if (intensity > 0)
-				draw_face(renderer, v1n, v2n, v3n, 
+				draw_face(renderer, v1s, v2s, v3s, 
 						{(uint8_t)(255 * intensity), 
 						 (uint8_t)(255 * intensity), 
 						 (uint8_t)(255 * intensity),

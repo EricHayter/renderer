@@ -12,6 +12,10 @@
 #include <algorithm>
 #include <initializer_list>
 #include <iostream>
+#include <stdexcept>
+
+template<size_t len>
+struct Vector; // Forward declaration
 
 template<size_t rows, size_t cols>
 struct Matrix {
@@ -25,14 +29,28 @@ struct Matrix {
    	{
 		// do some size checking here to ensure gridlike initalizer list
 		if (v.size() != rows)
-			printf("Not enough parameters in initailzer_list!");
-		for (size_t i = 0; i < rows; i++) {
-			if (v.begin()[i].size() != cols)
-				printf("Not enough value in column");
-			for (size_t j = 0; j < cols; j++)
-				m[i][j] = v.begin()[i].begin()[j];	
-		}
+			throw std::runtime_error("Initializer list row count mismatch.");
+        auto row_iter = v.begin();
+        for (size_t i = 0; i < rows; ++i) {
+            if (row_iter->size() != cols) {
+                throw std::runtime_error("Initializer list column count mismatch.");
+            }
+            std::copy(row_iter->begin(), row_iter->end(), m[i].begin());
+            ++row_iter;
+        }
 	}
+
+	operator Vector<rows>() const
+    {
+        if (cols != 1) {
+            throw std::runtime_error("Cannot convert Matrix to Vector: Matrix must have exactly one column.");
+        }
+        Vector<rows> v{};
+        for (size_t i = 0; i < rows; ++i) {
+            v[i] = m[i][0];
+        }
+        return v;
+    }
 
 	// Matrix multiplication
 	template<size_t k>
@@ -50,15 +68,15 @@ struct Matrix {
 
 	const std::array<float, cols>& operator[](size_t i) const
 	{
-		if (i < 0 || i >= rows)
-			throw "Illegal index!";
+		if (i >= rows)
+			throw std::out_of_range("Matrix index out of range.");
 		return m[i];
 	}
 
 	std::array<float, cols>& operator[](size_t i)
 	{
-		if (i < 0 || i >= rows)
-			throw "Illegal index!";
+		if (i >= rows)
+			throw std::out_of_range("Matrix index out of range.");
 		return m[i];
 	}
 };
