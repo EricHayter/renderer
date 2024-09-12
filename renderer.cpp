@@ -9,26 +9,6 @@
 
 const Vector<3> light_dir{{ 0, 0, -1 }};
 
-Vector<3> scale_vertex(const Vector<3> &v)
-{
-	return {{ 	
-		(v[X] + 1.0f) * SCREEN_WIDTH / 2, 
-		(-v[Y] + 1.0f) * SCREEN_HEIGHT / 2,
-		v[Z]
-	}};
-}
-
-Vector<3> project_vertex(const Matrix<4, 4> &pm, const Vector<3> &v)
-{
-	// is this function even worth it to have?
-	Vector<4> vh{ v.homogenize() };
-
-	// where should I pass in the transformation matrix???
-	vh = pm * vh;	
-
-	return vh.dehomogenize();
-}
-
 // let's make a constructor for the renderer here
 Renderer::Renderer() :
 	zbuffer{},

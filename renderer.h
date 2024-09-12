@@ -32,8 +32,6 @@ typedef struct Renderer {
 	~Renderer();
 } Renderer;
 
-Vector<3> scale_vertex(const Vector<3> &v);
-
 void clear_screen(Renderer &renderer);
 void set_color(Renderer &renderer, Color clr);
 void draw_point(Renderer &renderer, Point2D p);
