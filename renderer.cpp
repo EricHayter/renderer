@@ -9,10 +9,12 @@
 
 const Vector<3> light_dir{{ 0, 0, -1 }};
 
-// let's make a constructor for the renderer here
+//=============================================================================
+// Renderer Object
+//=============================================================================
 Renderer::Renderer() :
 	zbuffer{},
-	light_dir{{ 0,  0, -1 }},
+	light_dir{ 0,  0, -1 },
 	pos{0, 0, -4} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -46,7 +48,9 @@ Renderer::~Renderer() {
     SDL_DestroyWindow(window);
 }
 
-// make a function to clear the screen (don't forget about zbuffer too)
+//=============================================================================
+// Utility Functions
+//=============================================================================
 void clear_screen(Renderer &renderer)
 {
 	set_color(renderer, {0, 0, 0, 255});
@@ -72,8 +76,10 @@ void set_color(Renderer &renderer, Color clr)
             clr.a);
 }
 
-// this is just a POC I'll be editting the values of the vertices in this
-// function (will edit to remove this feature later)
+
+//=============================================================================
+// Rendering Models
+//=============================================================================
 void draw_model(Renderer &renderer, const Model &model)
 {
 	// let's create our transformation matrix here
