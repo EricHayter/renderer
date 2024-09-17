@@ -7,8 +7,6 @@
 #include <functional>
 #include <limits>
 
-const Vector<3> light_dir{{ 0, 0, -1 }};
-
 //=============================================================================
 // Renderer Object
 //=============================================================================
@@ -82,28 +80,30 @@ void set_color(Renderer &renderer, Color clr)
 //=============================================================================
 void draw_model(Renderer &renderer, const Model &model)
 {
+	// this will scale our points to appropriate sizes for our screen
+	Matrix<4, 4> viewPort{
+		{ SCREEN_WIDTH/2.f, 	0, 					0, 				SCREEN_WIDTH/2.f },
+		{ 0, 					-SCREEN_HEIGHT/2.f, 0, 				SCREEN_HEIGHT/2.f},
+		{ 0, 					0, 					DEPTH/2.f, 	DEPTH/2.f},
+		{ 0, 					0, 					0, 				1.f }
+	};
+
+
 	// let's create our transformation matrix here
-	Matrix<4, 4> tm{
-		{1.f, 0.f, 0.f, renderer.pos[X]},		 	
-		{0.f, 1.f, 0.f, renderer.pos[Y]},		 	
-		{0.f, 0.f, 1.f, 0.f},		 	
-		{0.f, 0.f, 1/renderer.pos[Z], 1.f}
+	Matrix<4, 4> projMatrix{
+		{1.f, 		0.f, 		0.f, 				0.f},		 	
+		{0.f, 		1.f, 		0.f, 				0.f},		 	
+		{0.f, 		0.f, 		1.f, 				0.f},		 	
+		{0.f, 		0.f, 		1/renderer.pos[Z], 	1.f}
 	};
-
-	Matrix<4, 4> sm{
-		{ SCREEN_WIDTH*1/2.f, 0, 0, SCREEN_WIDTH/2.f },
-		{ 0, -SCREEN_HEIGHT*1/2.f, 0, SCREEN_HEIGHT/2.f},
-		{ 0, 0, DEPTH*3/4.f, DEPTH/2.f},
-		{ 0, 0, 0, 1.f }
-	};
-
-	Matrix<4, 4> cm{ sm * tm};
+	
+	Matrix<4, 4> transMatrix{ viewPort * projMatrix};
 
 
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
 		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
-		Vector<3> v1s{static_cast<Vector<4>>(cm * v1.homogenize()).dehomogenize()};
+		Vector<3> v1s{static_cast<Vector<4>>(transMatrix * v1.homogenize()).dehomogenize()};
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
@@ -114,11 +114,11 @@ void draw_model(Renderer &renderer, const Model &model)
 			
 			// find the normal of vectors from v1 to v2 and v1 to v3
 			Vector<3> normal{ cross_product(v3 - v1, v2 - v1).normalize() };
-			float intensity{ dot_product(normal, light_dir) };
+			float intensity{ dot_product(normal, renderer.light_dir) };
 
 			// transform vectors for screen
-			Vector<3> v2s{static_cast<Vector<4>>(cm * v2.homogenize()).dehomogenize()};
-			Vector<3> v3s{static_cast<Vector<4>>(cm * v3.homogenize()).dehomogenize()};
+			Vector<3> v2s{static_cast<Vector<4>>(transMatrix * v2.homogenize()).dehomogenize()};
+			Vector<3> v3s{static_cast<Vector<4>>(transMatrix * v3.homogenize()).dehomogenize()};
 
 			
 			
