@@ -34,6 +34,9 @@ Model::Model(std::string filename) :
 				break;		
 		}
 	}
+
+	// normalize the point coordinate values into the range of [-1, 1]
+	
 }
 
 int Model::nfaces() const

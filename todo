@@ -1,6 +1,3 @@
-- normalize all coordinates on model creation such that all values are in range 
-  of [0, 1].
-- add option to move camera
 - small rasterization bug in the triangle fill. 
 	- artifacts are visible in statue .obj file
 	- generally clean this up a big it seems uneeded to have 2 functions that 
