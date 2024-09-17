@@ -80,14 +80,16 @@ void set_color(Renderer &renderer, Color clr)
 //=============================================================================
 void draw_model(Renderer &renderer, const Model &model)
 {
-	// this will scale our points to appropriate sizes for our screen
-	Matrix<4, 4> viewPort{
-		{ SCREEN_WIDTH/2.f, 	0, 					0, 				SCREEN_WIDTH/2.f },
-		{ 0, 					-SCREEN_HEIGHT/2.f, 0, 				SCREEN_HEIGHT/2.f},
-		{ 0, 					0, 					DEPTH/2.f, 	DEPTH/2.f},
-		{ 0, 					0, 					0, 				1.f }
-	};
+	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() };
+	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
+	Vector<3> y{ cross_product(z, x).normalize() };
 
+	Matrix<4, 4> modelView{
+		{x[0], y[0], z[0], renderer.pos[0]},
+		{x[1], y[1], z[1], renderer.pos[1]},
+		{x[2], y[2], z[2], renderer.pos[2]},
+		{0.f,  0.f,  0.f,  1.f}	
+	};
 
 	// let's create our transformation matrix here
 	Matrix<4, 4> projMatrix{
@@ -96,9 +98,18 @@ void draw_model(Renderer &renderer, const Model &model)
 		{0.f, 		0.f, 		1.f, 				0.f},		 	
 		{0.f, 		0.f, 		1/renderer.pos[Z], 	1.f}
 	};
-	
-	Matrix<4, 4> transMatrix{ viewPort * projMatrix};
 
+
+
+	// this will scale our points to appropriate sizes for our screen
+	Matrix<4, 4> viewPort{
+		{ SCREEN_WIDTH/2.f, 	0, 					0, 				SCREEN_WIDTH/2.f },
+		{ 0, 					-SCREEN_HEIGHT/2.f, 0, 				SCREEN_HEIGHT/2.f},
+		{ 0, 					0, 					DEPTH/2.f, 	DEPTH/2.f},
+		{ 0, 					0, 					0, 				1.f }
+	};
+		
+	Matrix<4, 4> transMatrix{ viewPort * projMatrix * modelView};
 
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
