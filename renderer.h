@@ -26,6 +26,8 @@ typedef struct Renderer {
 	SDL_Window *window;
 	Vector<3> light_dir;
 	Vector<3> pos;
+	float yaw; 
+	float pitch;
 	std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer;
 
 	Renderer();

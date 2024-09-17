@@ -191,4 +191,6 @@ float dot_product(const Vector<len> &v1, const Vector<len> &v2)
 
 Vector<3> cross_product(const Vector<3> &v1, const Vector<3> &v2);
 
+Vector<3> view_vector(float yaw, float pitch);
+
 #endif

@@ -1,4 +1,5 @@
 #include "vector.h"
+#include <cmath>
 
 Vector<3> cross_product(const Vector<3> &v1, const Vector<3> &v2)
 {
@@ -9,3 +10,11 @@ Vector<3> cross_product(const Vector<3> &v1, const Vector<3> &v2)
 	return nv;
 }
 
+Vector<3> view_vector(float yaw, float pitch)
+{
+	float x{ std::cos(yaw) };
+	float y{ std::sin(yaw) };
+	float z{ std::tan(pitch) };
+	Vector<3> v{ x, y, z };
+	return v.normalize();
+}
