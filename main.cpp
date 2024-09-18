@@ -13,11 +13,11 @@ int main(int argc, char** argv)
 
 	try {
 		Model model{ model_name };    
-		Renderer renderer{};
-		renderer.yaw = M_PI / 8.f;
-		renderer.pitch = -M_PI / 8.f;
+  		Renderer renderer{};
+		renderer.yaw = 0;
+		renderer.pitch = 0;
 		draw_model(renderer, model);
-
+	
 		SDL_RenderPresent(renderer.sdl_renderer);
 
 		SDL_Delay(3000);

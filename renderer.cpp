@@ -81,7 +81,9 @@ void set_color(Renderer &renderer, Color clr)
 void draw_model(Renderer &renderer, const Model &model)
 {
 	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() };
-	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
+	//Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
+	Vector<3> x{ cross_product({renderer.pos[X], renderer.pos[Y] + 1, renderer.pos[Z]},
+		   	z).normalize() }; 
 	Vector<3> y{ cross_product(z, x).normalize() };
 
 	Matrix<4, 4> modelView{
@@ -149,51 +151,27 @@ void draw_model(Renderer &renderer, const Model &model)
 void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color)
 {
 	set_color(renderer, color);
-	if (v1[Y] < v2[Y])
-		std::swap(v1, v2);
-	if (v2[Y] < v3[Y])
-		std::swap(v2, v3);
-	if (v1[Y] < v2[Y])
-		std::swap(v1, v2);
-
-	if (v3[Y] - v1[Y] == 0)
-		return;
-
-	// parametrization of a line from p1 to p3
-	float t{ (v2[Y] - v3[Y])/(v3[Y] - v1[Y]) };	
-	float x{ (v3[X] - v1[X])*t + v3[X] };
-	float y{ v2[Y] };
-	float z{ (v3[Z] - v1[Z])*t + v3[Z] };
-
-	Vector<3> vt{{ x, y, z }};
-	draw_face_upper(renderer, v1, v2, vt, color);
-	draw_face_lower(renderer, vt, v2, v3, color);
-}
-
-void draw_face_upper(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color)
-{
-	if (v1[Y] == v2[Y]) { // this triangle is pointing down
-		return;
-	}
 	
-	if (v2[X] > v3[X]) // put v2 on the left and v3 on the right
-		std::swap(v2, v3);
-
+	std::function<bool (const Vector<3> &)> edgeFunc{ get_edge_func(v1, v2, v3) };
 	std::function<float (const Point2D&)> solFunc{ findPlaneSolution(v1, v2, v3) };
 
-	float s2{ static_cast<float>(v1[X] - v2[X])/(v1[Y] - v2[Y])};
-	float s3{ static_cast<float>(v1[X] - v3[X])/(v1[Y] - v3[Y])};
-	float pointer2{ (float)v2[X] - s2 };
-	float pointer3{ (float)v3[X] - s3 };
+	// create a bounding box around our triangle
+	float maxX{ std::max({ v1[X], v2[X], v3[X] }) };	
+	maxX = maxX >= SCREEN_WIDTH ? SCREEN_WIDTH - 1 : maxX;
 
-	for (int y = v2[Y]; y <= v1[Y]; y++) {
-		if (y < 0 || y >= SCREEN_HEIGHT)
-			continue;
-		pointer2 += s2;
-		pointer3 += s3;
-		for (int x = pointer2; x <= pointer3; x++) {
-			if (x < 0 || x >= SCREEN_WIDTH)
-				continue;
+	float minX{ std::min({ v1[X], v2[X], v3[X] }) };	
+	minX = minX <= 0 ? 0 : minX;
+
+	float maxY{ std::max({ v1[Y], v2[Y], v3[Y] }) };	
+	maxY = maxY >= SCREEN_HEIGHT ? SCREEN_HEIGHT - 1 : maxY;
+
+	float minY{ std::min({ v1[Y], v2[Y], v3[Y] }) };	
+	minY = minY <= 0 ? 0 : minY;
+
+	for (int x = minX; x <= maxX; x++) {
+		for (int y = minY; y <= maxY; y++) {
+			if (!edgeFunc({(float)x, (float)y, 0.f}))
+					continue;
 			float z{ solFunc({x, y}) };
 			if (z >= renderer.zbuffer[x][y]) {
 				draw_point(renderer, {x, y});	
@@ -203,36 +181,21 @@ void draw_face_upper(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v
 	}
 }
 
-void draw_face_lower(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color)
+std::function<bool (const Vector<3> &)> 
+get_edge_func(const Vector<3> &v1,  const Vector<3> &v2, const Vector<3> &v3)
 {
-	if (v2[Y] == v3[Y]) {
-		return;
-	}
+	return [v1, v2, v3](const Vector<3> &p){
+		bool ret{ true };
+		Vector<3> dv12{ v1 - v2 };
+		Vector<3> dv23{ v2 - v3 };
+		Vector<3> dv31{ v3 - v1 };
 
-	if (v1[X] > v2[X]) // make sure that v1 is on the left
-		std::swap(v1, v2);
+		ret &= ((p[Y] - v1[Y])*dv12[X] - (p[X] - v1[X])*dv12[Y] >= 0);
+		ret &= ((p[Y] - v2[Y])*dv23[X] - (p[X] - v2[X])*dv23[Y] >= 0);
+		ret &= ((p[Y] - v3[Y])*dv31[X] - (p[X] - v3[X])*dv31[Y] >= 0);
 
-	std::function<float (const Point2D&)> solFunc{ findPlaneSolution(v1, v2, v3) };
-
-	float sl{ ((float)v3[X] - v1[X])/(v3[Y] - v1[Y])};
-	float sr{ ((float)v3[X] - v2[X])/(v3[Y] - v2[Y])};
-	float pointerl{ (float)v3[X] - sl };
-	float pointerr{ (float)v3[X] - sr};
-	for (int y = v3[Y]; y <= v2[Y]; y++) {
-		if (y < 0 || y >= SCREEN_HEIGHT)
-			continue;
-		pointerl += sl;
-		pointerr += sr;	
-		for (int x = pointerl; x <= pointerr; x++) { 
-			if (x < 0 || x >= SCREEN_WIDTH)
-				continue;
-			float z{ solFunc({x, y}) };
-			if (z >= renderer.zbuffer[x][y]) {
-				draw_point(renderer, {x, y});	
-				renderer.zbuffer[x][y] = z;
-			}
-		}
-	}
+		return ret;	
+	};
 }
 
 // given 3 points to define a plane return a function for solutions of 
