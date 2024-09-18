@@ -81,15 +81,13 @@ void set_color(Renderer &renderer, Color clr)
 void draw_model(Renderer &renderer, const Model &model)
 {
 	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() };
-	//Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
-	Vector<3> x{ cross_product({renderer.pos[X], renderer.pos[Y] + 1, renderer.pos[Z]},
-		   	z).normalize() }; 
+	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
 	Vector<3> y{ cross_product(z, x).normalize() };
 
 	Matrix<4, 4> modelView{
-		{x[0], y[0], z[0], renderer.pos[0]},
-		{x[1], y[1], z[1], renderer.pos[1]},
-		{x[2], y[2], z[2], renderer.pos[2]},
+		{x[0], x[1], x[2], renderer.pos[0]},
+		{y[0], y[1], y[2], renderer.pos[1]},
+		{z[0], z[1], z[2], renderer.pos[2]},
 		{0.f,  0.f,  0.f,  1.f}	
 	};
 
