@@ -114,7 +114,7 @@ void draw_model(Renderer &renderer, const Model &model)
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
 		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
-		Vector<3> v1s{static_cast<Vector<4>>(transMatrix * v1.homogenize()).dehomogenize()};
+		Vector<3> v1s{Vector<4>(transMatrix * v1.homogenize()).dehomogenize()};
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
@@ -128,8 +128,8 @@ void draw_model(Renderer &renderer, const Model &model)
 			float intensity{ dot_product(normal, renderer.light_dir) };
 
 			// transform vectors for screen
-			Vector<3> v2s{static_cast<Vector<4>>(transMatrix * v2.homogenize()).dehomogenize()};
-			Vector<3> v3s{static_cast<Vector<4>>(transMatrix * v3.homogenize()).dehomogenize()};
+			Vector<3> v2s{Vector<4>(transMatrix * v2.homogenize()).dehomogenize()};
+			Vector<3> v3s{Vector<4>(transMatrix * v3.homogenize()).dehomogenize()};
 
 			
 			
@@ -214,4 +214,21 @@ std::function<float (const Point2D&)> findPlaneSolution(const Vector<3> &v1, con
 	return [a, b, c, x0, y0, z0](const Point2D& p){ 
 		return (-a * (p.x - x0) - b * (p.y - y0))/c + z0;
 	};
+}
+
+std::function<Vector<3> (const Vector<3>&)> findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, const Vector<3> &v2, const Vector<3> &v2n, const Vector<3> &v3, const Vector<3> &v3n)
+{
+	Vector<3> dv3v1{ v3 - v1 };
+	Vector<3> dv2v1{ v2 - v1 };
+	if (dv3v1[X] == 0 && dv3v1[Y] == 0) // points are inline with z plane
+		return [v1, v3](const Vector<3> &v){
+			return cross_product(v1, v3);	
+		};
+	if (dv2v1[X] == 0 && dv2v1[Y] == 0) // points are inline with z plane
+		return [v1, v2](const Vector<3> &v){
+			return cross_product(v1, v2);	
+		};
+
+	// need to find a solution for the parametrization
+	// only really care about the x and y
 }
