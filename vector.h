@@ -122,6 +122,7 @@ struct Vector : public Matrix<len, 1> {
 		return nv;
 	}
 
+
 	// Subscript operator overloading
 	const float& operator[](size_t i) const
 	{
@@ -179,6 +180,16 @@ struct Vector : public Matrix<len, 1> {
 		return nv;
 	}
 };
+
+template <size_t len>
+Vector<len> operator*(float scalar, const Vector<len> &v)
+{
+	Vector<len> nv{};
+	for (size_t i = 0; i < len; i++)
+		nv[i] = scalar * v[i];	
+	return nv;
+}
+
 
 template<size_t len>
 float dot_product(const Vector<len> &v1, const Vector<len> &v2)
