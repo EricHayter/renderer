@@ -99,8 +99,6 @@ void draw_model(Renderer &renderer, const Model &model)
 		{0.f, 		0.f, 		1/renderer.pos[Z], 	1.f}
 	};
 
-
-
 	// this will scale our points to appropriate sizes for our screen
 	Matrix<4, 4> viewPort{
 		{ SCREEN_WIDTH/2.f, 	0, 					0, 				SCREEN_WIDTH/2.f },
@@ -130,8 +128,6 @@ void draw_model(Renderer &renderer, const Model &model)
 			// transform vectors for screen
 			Vector<3> v2s{static_cast<Vector<4>>(transMatrix * v2.homogenize()).dehomogenize()};
 			Vector<3> v3s{static_cast<Vector<4>>(transMatrix * v3.homogenize()).dehomogenize()};
-
-			
 			
 			// intensity of light reflected will be equal to dot product of 
 			// view vector and normal of face
