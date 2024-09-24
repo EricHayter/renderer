@@ -120,26 +120,19 @@ void draw_model(Renderer &renderer, const Model &model)
 			//Vector<3> v3{ project_vertex(tm, model.vertex(face[j].vertex - 1)) };
 			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
 			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
-			
-			// find the normal of vectors from v1 to v2 and v1 to v3
-			Vector<3> normal{ cross_product(v3 - v1, v2 - v1).normalize() };
-			float intensity{ dot_product(normal, renderer.light_dir) };
-
+	
 			// transform vectors for screen
 			Vector<3> v2s{Vector<4>(transMatrix * v2.homogenize()).dehomogenize()};
 			Vector<3> v3s{Vector<4>(transMatrix * v3.homogenize()).dehomogenize()};
-
-			
 			
 			// intensity of light reflected will be equal to dot product of 
 			// view vector and normal of face
 			if (intensity > 0)
-				draw_face(renderer, v1s, v2s, v3s, 
-						{(uint8_t)(255 * intensity), 
-						 (uint8_t)(255 * intensity), 
-						 (uint8_t)(255 * intensity),
-						 255}
-						);
+				draw_face(renderer, 
+						v1s, model.
+						
+						v2s, v3s, 
+						{255, 255, 255, 255});
 		}
 	}
 }
@@ -155,7 +148,9 @@ void draw_face(Renderer &renderer,
 {
 	auto edgeFunc{ get_edge_func(v1, v2, v3) };
 	auto solFunc{ findPlaneSolution(v1, v2, v3) };
-	// auto normalFunc{ findNormalSolution(v1, 
+	auto normalFunc{ findNormalSolution(v1, v1n,
+										v2, v2n,
+										v3, v3n) };
 
 	// create a bounding box around our triangle
 	float maxX{ std::max({ v1[X], v2[X], v3[X] }) };	
@@ -176,7 +171,14 @@ void draw_face(Renderer &renderer,
 					continue;
 			float z{ solFunc({x, y}) };
 			if (z >= renderer.zbuffer[x][y]) {
-				draw_point(renderer, {x, y}, color);	
+				Vector<3> norm{ normalFunc({x, y}).normalize() };
+				float intensity{ dot_product(renderer.light_dir, norm) };
+				draw_point(renderer, {x, y}, 
+						{(uint8_t)(clr.r * intensity),
+						(uint8_t)(clr.g * intensity),
+						(uint8_t)(clr.b * intensity),
+						255}	
+						);	
 				renderer.zbuffer[x][y] = z;
 			}
 		}

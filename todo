@@ -2,3 +2,7 @@
 	- larger files cannot be renderered reliably at the moment
 	- maybe try some perf testing???
 - renderer object could use some refactoring its just got a bunch of junk in it
+
+- normal parsing
+- finish off drawing model
+- get the formatting right on the code it's all over the place

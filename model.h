@@ -85,6 +85,7 @@ class Model
 private:
     std::vector<Vector<3>> verticies;
 	std::vector<std::vector<FaceTuple>> faces;
+	std::vector<Normal> normals;
 public:
     Model(std::string filename);
 	int nfaces() const;

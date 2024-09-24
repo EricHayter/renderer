@@ -8,7 +8,8 @@
 
 Model::Model(std::string filename) :
 	verticies{},
-	faces{}
+	faces{},
+	normals{}
 {
 	std::ifstream inf{ filename }; 
 
@@ -22,17 +23,13 @@ Model::Model(std::string filename) :
 		if (line.length() == 0)
 			continue;
 
-		// switch this to split line soon
-		switch (line[0]) {
-			case 'v':
-				verticies.push_back(ModelParsing::parse_vertex(line));
-				break;
-			case 'f':
-				faces.push_back(ModelParsing::parse_face(line));
-				break;
-			default:
-				break;		
-		}
+		std::string entry_type{ line.substr(0, line.find(' ')) };
+		if (entry_type == "v")
+			verticies.push_back(ModelParsing::parse_vertex(line));
+		if (entry_type == "f")
+			faces.push_back(ModelParsing::parse_face(line));
+		if (entry_type == "vn")
+			normals.push_back();	
 	}
 
 	// normalize the point coordinate values into the range of [-1, 1]
@@ -84,32 +81,32 @@ FaceTuple ModelParsing::parse_face_tuple(const std::string &line)
 {
 	unsigned long start{ 0 };
 	unsigned long stop{ line.find('/') };
-	int u{ 0 };
+	int vertex_index{ 0 };
 
 	if (stop == -1) {
-		u = std::stoi(line.substr(start, line.length()));
-		return { u };
+		vertex_index = std::stoi(line.substr(start, line.length()));
+		return { vertex_index };
 	} else {
-		u = std::stoi(line.substr(start, stop - start));	
+		vertex_index = std::stoi(line.substr(start, stop - start));	
 	}
 
 	start = stop + 1;
 	stop = line.find('/', start);
-	int v{ 0 };	
+	int vertex_texture_index{ 0 };	
 	if (stop == -1) {
-		v = std::stoi(line.substr(start, line.length()));
-		return { u, v };
+		vertex_texture_index = std::stoi(line.substr(start, line.length()));
+		return { vertex_index, vertex_texture_index };
 	} else {
 		if (stop - start == 0) // in case of no second argument i.e. u//w
-			v = 0;
+			vertex_texture_index = 0;
 		else
-			v = std::stoi(line.substr(start, stop - start));	
+			vertex_texture_index = std::stoi(line.substr(start, stop - start));	
 	}
 
-	int w{ 0 };
+	int vertex_normal_index{ 0 };
 	start = stop + 1;
-	w = std::stoi(line.substr(start, line.length()));
-	return { u, v, w };
+	vertex_normal_index = std::stoi(line.substr(start, line.length()));
+	return { vertex_index, vertex_texture_index, vertex_normal_index };
 }
 
 // splits string at space characters
