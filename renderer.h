@@ -38,7 +38,7 @@ void clear_screen(Renderer &renderer);
 void draw_point(const Renderer &renderer, const Point2D &p, const Color &clr);
 
 void draw_model(Renderer &renderer, const Model &model);
-void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color);
+void draw_face(Renderer &renderer, const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3, const Color &color);
 std::function<bool (const Vector<3> &)> get_edge_func(const Vector<3> &v1,  const Vector<3> &v2, const Vector<3> &v3);
 std::function<float (const Point2D&)> findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3);
 

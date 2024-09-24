@@ -51,6 +51,9 @@ Renderer::~Renderer() {
 //=============================================================================
 void clear_screen(Renderer &renderer)
 {
+	// make sure render color is black before clearing
+    SDL_SetRenderDrawColor(renderer.sdl_renderer, 0, 0, 0, 0);
+
 	SDL_RenderClear(renderer.sdl_renderer);
 	for (auto i = 0; i < renderer.zbuffer.size(); i++) {
 		for (auto j = 0; j < renderer.zbuffer[i].size(); j++) {
@@ -141,7 +144,7 @@ void draw_model(Renderer &renderer, const Model &model)
 	}
 }
 
-void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, const Color &color)
+void draw_face(Renderer &renderer, const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3, const Color &color)
 {
 	std::function<bool (const Vector<3> &)> edgeFunc{ get_edge_func(v1, v2, v3) };
 	std::function<float (const Point2D&)> solFunc{ findPlaneSolution(v1, v2, v3) };
