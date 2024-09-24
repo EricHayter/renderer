@@ -35,8 +35,7 @@ typedef struct Renderer {
 } Renderer;
 
 void clear_screen(Renderer &renderer);
-void set_color(Renderer &renderer, Color clr);
-void draw_point(Renderer &renderer, Point2D p);
+void draw_point(const Renderer &renderer, const Point2D &p, const Color &clr);
 
 void draw_model(Renderer &renderer, const Model &model);
 void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color);

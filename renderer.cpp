@@ -51,7 +51,6 @@ Renderer::~Renderer() {
 //=============================================================================
 void clear_screen(Renderer &renderer)
 {
-	set_color(renderer, {0, 0, 0, 255});
 	SDL_RenderClear(renderer.sdl_renderer);
 	for (auto i = 0; i < renderer.zbuffer.size(); i++) {
 		for (auto j = 0; j < renderer.zbuffer[i].size(); j++) {
@@ -60,20 +59,16 @@ void clear_screen(Renderer &renderer)
 	}
 }
 
-void draw_point(Renderer& renderer, Point2D p)
-{
-	SDL_RenderDrawPoint(renderer.sdl_renderer, p.x, p.y);
-}
-
-void set_color(Renderer &renderer, Color clr)
+void draw_point(const Renderer& renderer, const Point2D &p, const Color &clr)
 {
     SDL_SetRenderDrawColor(renderer.sdl_renderer, 
             clr.r,
             clr.g,
             clr.b,
             clr.a);
-}
 
+	SDL_RenderDrawPoint(renderer.sdl_renderer, p.x, p.y);
+}
 
 //=============================================================================
 // Rendering Models
@@ -146,10 +141,8 @@ void draw_model(Renderer &renderer, const Model &model)
 	}
 }
 
-void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color)
+void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, const Color &color)
 {
-	set_color(renderer, color);
-	
 	std::function<bool (const Vector<3> &)> edgeFunc{ get_edge_func(v1, v2, v3) };
 	std::function<float (const Point2D&)> solFunc{ findPlaneSolution(v1, v2, v3) };
 
@@ -172,7 +165,7 @@ void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Col
 					continue;
 			float z{ solFunc({x, y}) };
 			if (z >= renderer.zbuffer[x][y]) {
-				draw_point(renderer, {x, y});	
+				draw_point(renderer, {x, y}, color);	
 				renderer.zbuffer[x][y] = z;
 			}
 		}
