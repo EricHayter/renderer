@@ -216,19 +216,40 @@ std::function<float (const Point2D&)> findPlaneSolution(const Vector<3> &v1, con
 	};
 }
 
-std::function<Vector<3> (const Vector<3>&)> findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, const Vector<3> &v2, const Vector<3> &v2n, const Vector<3> &v3, const Vector<3> &v3n)
+std::function<Vector<3> (const Point2D&)> findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, const Vector<3> &v2, const Vector<3> &v2n, const Vector<3> &v3, const Vector<3> &v3n)
 {
-	Vector<3> dv3v1{ v3 - v1 };
-	Vector<3> dv2v1{ v2 - v1 };
-	if (dv3v1[X] == 0 && dv3v1[Y] == 0) // points are inline with z plane
-		return [v1, v3](const Vector<3> &v){
-			return cross_product(v1, v3);	
-		};
-	if (dv2v1[X] == 0 && dv2v1[Y] == 0) // points are inline with z plane
-		return [v1, v2](const Vector<3> &v){
-			return cross_product(v1, v2);	
-		};
+	// disregard the z coordinate
+	// these will form our basis of R2
+	Vector<3> dv1{ v3 - v1 };
+	Vector<3> dv2{ v2 - v1 };
 
-	// need to find a solution for the parametrization
-	// only really care about the x and y
+	// check if these are co-linear in x and y
+	// also implicitly checks for zero vectors
+	if (dv1[X] * dv2[Y] == dv1[Y] * dv2[X])
+		return [dv1, dv2](const Point2D &p) { return cross_product(dv1, dv2); };
+
+	// make sure non-zero in top-left for RREF
+	if (dv1[X] == 0)
+		std::swap(dv1, dv2);
+	
+	// this is some row reduction to be hardcoded for R^2	
+	return [v1, dv1, dv2, v1n, v2n, v3n](const Point2D &p){
+		// find s, t such that np = s * dv1 + t * dv2
+		float s{};
+		float t{};
+		Point2D np{ (int)(p.x - v1[X]), (int)(p.y - v1[Y]) };
+
+		// reduce second row
+		if (dv1[Y] == 0) {
+			// NOTE: dv2[Y] has been checked to be non-zero at colinear check
+			s = np.y / dv2[Y];
+		} else {
+			s = np.y / dv1[X] - np.x;
+		}
+
+		// reduce first row
+		t = np.x / dv1[X] - s;
+
+		return v1n + s * dv1 + t * dv2;
+	};
 }
