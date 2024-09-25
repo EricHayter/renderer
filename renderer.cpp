@@ -13,7 +13,7 @@
 Renderer::Renderer() :
 	zbuffer{},
 	light_dir{ 0,  0, -1 },
-	pos{0, 0, -4} // maybe tweak this value later
+	pos{0, 0, -1} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -97,6 +97,12 @@ void draw_model(Renderer &renderer, const Model &model)
 		{0.f, 		0.f, 		1/renderer.pos[Z], 	1.f}
 	};
 
+//	Matrix<4, 4> projMatrix{
+//		{1.f, 		0.f, 		0.f, 				0.f},		 	
+//		{0.f, 		1.f, 		0.f, 				0.f},		 	
+//		{0.f, 		0.f, 		1.f, 				0.f},		 	
+//		{0.f, 		0.f, 		0.f, 				1.f}
+//	};
 
 
 	// this will scale our points to appropriate sizes for our screen
@@ -112,27 +118,27 @@ void draw_model(Renderer &renderer, const Model &model)
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
 		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
+		Vector<3> v1n{ model.normal(face[0].normal - 1) };
+
 		Vector<3> v1s{Vector<4>(transMatrix * v1.homogenize()).dehomogenize()};
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
-			//Vector<3> v2{ project_vertex(tm, model.vertex(face[j-1].vertex - 1)) };
-			//Vector<3> v3{ project_vertex(tm, model.vertex(face[j].vertex - 1)) };
 			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
+			Vector<3> v2n{ model.vertex(face[j-1].normal - 1) };
 			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
+			Vector<3> v3n{ model.vertex(face[j].normal - 1) };
 	
 			// transform vectors for screen
 			Vector<3> v2s{Vector<4>(transMatrix * v2.homogenize()).dehomogenize()};
 			Vector<3> v3s{Vector<4>(transMatrix * v3.homogenize()).dehomogenize()};
 			
-			// intensity of light reflected will be equal to dot product of 
-			// view vector and normal of face
-			if (intensity > 0)
-				draw_face(renderer, 
-						v1s, model.
-						
-						v2s, v3s, 
-						{255, 255, 255, 255});
+			draw_face(renderer, 
+					v1s, v1n,
+					v2s, v2n,
+					v3s, v3n,
+					{100, 0, 0, 255}
+					);
 		}
 	}
 }
@@ -173,13 +179,15 @@ void draw_face(Renderer &renderer,
 			if (z >= renderer.zbuffer[x][y]) {
 				Vector<3> norm{ normalFunc({x, y}).normalize() };
 				float intensity{ dot_product(renderer.light_dir, norm) };
-				draw_point(renderer, {x, y}, 
-						{(uint8_t)(clr.r * intensity),
-						(uint8_t)(clr.g * intensity),
-						(uint8_t)(clr.b * intensity),
-						255}	
-						);	
-				renderer.zbuffer[x][y] = z;
+				if (intensity > 0) {
+					draw_point(renderer, {x, y}, 
+							{(uint8_t)(clr.r * intensity),
+							(uint8_t)(clr.g * intensity),
+							(uint8_t)(clr.b * intensity),
+							255}	
+							);	
+					renderer.zbuffer[x][y] = z;
+				}
 			}
 		}
 	}
@@ -228,6 +236,7 @@ findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n,
 				   const Vector<3> &v2, const Vector<3> &v2n, 
 				   const Vector<3> &v3, const Vector<3> &v3n)
 {
+	return [v1n, v2n, v3n](const Point2D &p) { return v1n + v2n + v3n; };
 	// disregard the z coordinate
 	// these will form our basis of R2
 	Vector<3> dv2{ v2 - v1 };

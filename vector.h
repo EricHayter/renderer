@@ -79,6 +79,22 @@ struct Matrix {
 			throw std::out_of_range("Matrix index out of range.");
 		return m[i];
 	}
+
+	// return the transpose of a matrix
+	Matrix<cols, rows> transpose()
+	{
+		Matrix<cols, rows> nm{};	
+		for (size_t i = 0; i < rows; i++)
+			for (size_t j = 0; j < cols; j++)
+				nm[j][i] = (*this)[i][j];
+		return nm;
+	}
+
+	// TODO finish this
+	float determinant()
+	{
+		return 0.f;	
+	}
 };
 
 template <size_t rows, size_t cols>

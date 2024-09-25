@@ -25,11 +25,11 @@ Model::Model(std::string filename) :
 
 		std::string entry_type{ line.substr(0, line.find(' ')) };
 		if (entry_type == "v")
-			verticies.push_back(ModelParsing::parse_vertex(line));
+			verticies.push_back(ModelParsing::parse_vector(line));
 		if (entry_type == "f")
 			faces.push_back(ModelParsing::parse_face(line));
 		if (entry_type == "vn")
-			normals.push_back();	
+			normals.push_back(ModelParsing::parse_vector(line));	
 	}
 
 	// normalize the point coordinate values into the range of [-1, 1]
@@ -46,13 +46,18 @@ Vector<3> Model::vertex(int i) const
 	return verticies[i];
 }
 
+Vector<3> Model::normal(int i) const
+{
+	return normals[i];
+}
+
 std::vector<FaceTuple> Model::face(int i) const
 {
 	return faces[i];
 }
 
 // given a string of input get the vertex value
-Vector<3> ModelParsing::parse_vertex(const std::string &line)
+Vector<3> ModelParsing::parse_vector(const std::string &line)
 {
 	// ignoring w entry for simplicity
 	std::vector<std::string> split_strs { ModelParsing::split_string(line) };
