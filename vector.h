@@ -89,13 +89,42 @@ struct Matrix {
 				nm[j][i] = (*this)[i][j];
 		return nm;
 	}
-
-	// TODO finish this
-	float determinant()
-	{
-		return 0.f;	
-	}
 };
+
+// using laplace expansion for this
+// I think the recursive call will be heavy on memory
+// maybe look to find a better solution although it's good 
+// enough for 4 x 4 matricies
+
+float determinant(const Matrix<1, 1> &m);
+
+template<size_t n>
+float determinant(const Matrix<n, n> &m)
+{
+	float det{ 0.f };
+	for (size_t i = 0; i < n; i++) {
+		// get the sub-matricies for the recursive calls
+		float coefficient{ i % 2 == 0 ? m[0][i] : -m[0][i] };
+		int skipped{ 0 }; // have I skipped over the column of the coefficient?
+
+		Matrix<n-1, n-1> sm{};
+		for (size_t col = 0; col < n; col++) {
+			if (col == i) {
+				skipped = 1;
+				continue;
+			}
+			for (size_t row = 1; row < n; row++) {
+						sm[row-1][col - skipped] = m[row][col];
+			}
+		}
+
+		// add coefficient times determinant of submatrix to determinant
+		det += coefficient * determinant(sm);
+	}
+	return det;
+}
+
+
 
 template <size_t rows, size_t cols>
 std::ostream& operator<<(std::ostream& out, const Matrix<rows, cols> &m)
