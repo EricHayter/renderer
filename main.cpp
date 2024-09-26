@@ -10,11 +10,11 @@
 int main(int argc, char** argv)
 {
 	Matrix<2, 2> m{
-			{2.f, 0.f},
-			{15.f, 1.f}
+			{2.f, 1.f},
+			{1.f, 1.f}
 			};
 
-	std::cout << determinant(m);
+	std::cout << inverse(m);
 	return 0;
 	char const *model_name{ DEFAULT_MODEL };
 	if (argc == 2)

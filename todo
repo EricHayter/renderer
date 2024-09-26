@@ -7,3 +7,8 @@
 - get the formatting right on the code it's all over the place
 
 - use bilinear interpolation for phong shading
+
+- first setup stuff required for adjusting normal values
+	- inverse matries
+	- adj matricies
+- organize these files holly smokes Eric

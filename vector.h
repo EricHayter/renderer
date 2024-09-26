@@ -124,7 +124,44 @@ float determinant(const Matrix<n, n> &m)
 	return det;
 }
 
+template<size_t n>
+Matrix<n, n> cofactor(const Matrix<n, n> &m)
+{
+	Matrix<n, n> rm{};
+	for (size_t i = 0; i < n; i++) { 		// row
+		for (size_t j = 0; j < n; j++) {	// col
+			int sign{ (i + j) % 2 == 0 ? 1 : -1 };
+			// submatrix to find the determinant of
+			Matrix<n-1, n-1> sm{};
+				
+			int skipped_row{ 0 };			
+			for (size_t row = 0; row < n; row++) {
+				int skipped_col{ 0 };			
+				if (row == i) {
+					skipped_row = 1;	
+					continue;
+				}
+				for (size_t col = 0; col < n; col++) {
+					if (col == j) {
+						skipped_col = 1;	
+						continue;
+					}
+					sm[row - skipped_row][col - skipped_col] = m[row][col];
+				}
+			}
 
+			// submatrix is created find the determinant
+			rm[i][j] = sign*determinant(sm);
+		}
+	}
+	return rm;
+}
+
+template<size_t n>
+Matrix<n, n> inverse(const Matrix<n, n> &m)
+{
+	return 1/determinant(m)*cofactor(m).transpose();	
+}
 
 template <size_t rows, size_t cols>
 std::ostream& operator<<(std::ostream& out, const Matrix<rows, cols> &m)
@@ -225,6 +262,18 @@ struct Vector : public Matrix<len, 1> {
 		return nv;
 	}
 };
+
+template <size_t row, size_t col>
+Matrix<row, col> operator*(float scalar, const Matrix<row, col> &m)
+{
+	Matrix<row, col> nm{};
+	for (size_t i = 0; i < row; i++) {
+		for (size_t j = 0; j < col; j++) {
+			nm[i][j] = scalar * m[i][j];	
+		}
+	}
+	return nm;
+}
 
 template <size_t len>
 Vector<len> operator*(float scalar, const Vector<len> &v)
