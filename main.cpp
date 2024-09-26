@@ -9,13 +9,6 @@
 
 int main(int argc, char** argv)
 {
-	Matrix<2, 2> m{
-			{2.f, 1.f},
-			{1.f, 1.f}
-			};
-
-	std::cout << inverse(m);
-	return 0;
 	char const *model_name{ DEFAULT_MODEL };
 	if (argc == 2)
 		model_name = argv[1];

@@ -97,14 +97,6 @@ void draw_model(Renderer &renderer, const Model &model)
 		{0.f, 		0.f, 		1/renderer.pos[Z], 	1.f}
 	};
 
-//	Matrix<4, 4> projMatrix{
-//		{1.f, 		0.f, 		0.f, 				0.f},		 	
-//		{0.f, 		1.f, 		0.f, 				0.f},		 	
-//		{0.f, 		0.f, 		1.f, 				0.f},		 	
-//		{0.f, 		0.f, 		0.f, 				1.f}
-//	};
-
-
 	// this will scale our points to appropriate sizes for our screen
 	Matrix<4, 4> viewPort{
 		{ SCREEN_WIDTH/2.f, 	0, 					0, 				SCREEN_WIDTH/2.f },
@@ -114,30 +106,40 @@ void draw_model(Renderer &renderer, const Model &model)
 	};
 		
 	Matrix<4, 4> transMatrix{ viewPort * projMatrix * modelView};
+	Matrix<4, 4> normalTransMatrix{ inverse(transMatrix).transpose() };
 
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
-		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
-		Vector<3> v1n{ model.normal(face[0].normal - 1) };
 
-		Vector<3> v1s{Vector<4>(transMatrix * v1.homogenize()).dehomogenize()};
+		// get v1 and transform it
+		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
+		v1 = Vector<4>(transMatrix * v1.homogenize()).dehomogenize();
+
+		// get normal and transform it
+		Vector<3> v1n{ model.normal(face[0].normal - 1) };
+		v1n = Vector<4>(normalTransMatrix * v1n.homogenize()).dehomogenize().normalize();
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
+			// get v2 and transform it
 			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
+			v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
+
 			Vector<3> v2n{ model.vertex(face[j-1].normal - 1) };
+			v2n = Vector<4>(normalTransMatrix * v2n.homogenize()).dehomogenize().normalize();
+
+			// get v3 and transform it
 			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
+			v3 = Vector<4>(transMatrix * v3.homogenize()).dehomogenize();
+
 			Vector<3> v3n{ model.vertex(face[j].normal - 1) };
-	
-			// transform vectors for screen
-			Vector<3> v2s{Vector<4>(transMatrix * v2.homogenize()).dehomogenize()};
-			Vector<3> v3s{Vector<4>(transMatrix * v3.homogenize()).dehomogenize()};
+			v3n = Vector<4>(normalTransMatrix * v3n.homogenize()).dehomogenize().normalize();
 			
 			draw_face(renderer, 
-					v1s, v1n,
-					v2s, v2n,
-					v3s, v3n,
-					{100, 0, 0, 255}
+					v1, v1n,
+					v2, v2n,
+					v3, v3n,
+					{255, 255, 255, 255}
 					);
 		}
 	}
@@ -236,7 +238,7 @@ findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n,
 				   const Vector<3> &v2, const Vector<3> &v2n, 
 				   const Vector<3> &v3, const Vector<3> &v3n)
 {
-	return [v1n, v2n, v3n](const Point2D &p) { return v1n + v2n + v3n; };
+	return [v1n, v2n, v3n](const Point2D &p) { return 1.f/3 * (v1n + v2n + v3n); };
 	// disregard the z coordinate
 	// these will form our basis of R2
 	Vector<3> dv2{ v2 - v1 };
