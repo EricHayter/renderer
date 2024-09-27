@@ -1,7 +1,7 @@
 # renderer
 
 This is a renderer for the .obj file format of 3D models often used in 
-applications like blender. SDL has been used for the creation of windows and 
+applications like blender. [SDL](https://wiki.libsdl.org/SDL2/FrontPage) has been used for the creation of windows and 
 drawing points on said window, however all other operations were written by me.
 
 ## Using the program:
@@ -16,7 +16,7 @@ in order to build. For instructions on installing the dependencies look at the
 [SDL wiki](https://wiki.libsdl.org/SDL2/Installation).
 
 ## Progression :chart_with_upwards_trend: 
-I've taken an incremental approach to the project intially starting with a very
+I've taken an incremental approach to the project initially starting with a very
 basic renderer and slowly adding additional features. Here's the progress that
 I've made:
 
@@ -47,7 +47,7 @@ the models by adjusting yaw and pitch parameters of the rendering environment.
 
 ## TODO :white_check_mark:
 - Currently working on the 4th iteration of the renderer which will include
-  phong shading giving models (ideally) a more smooth look than the current 
+  [Phong shading](https://en.wikipedia.org/wiki/Phong_shading) giving models (ideally) a more smooth look than the current 
   jagged edges.
     - implement extra linear algebra tooling for calculating the transformation
       matrix of normal vectors. :white_check_mark:
