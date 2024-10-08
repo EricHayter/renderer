@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
 			SDL_RenderPresent(renderer.sdl_renderer);
 			clear_screen(renderer);
-			SDL_Delay(1000);
+//			SDL_Delay(1000);
 		}
 	
 

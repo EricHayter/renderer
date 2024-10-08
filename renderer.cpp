@@ -177,11 +177,10 @@ void draw_face(Renderer &renderer,
 	for (int x = minX; x <= maxX; x++) {
 		for (int y = minY; y <= maxY; y++) {
 			if (!edgeFunc({(float)x, (float)y, 0.f}))
-					continue;
+				continue;
 			float z{ solFunc({x, y}) };
-			// std::cout << z << "\n";
 			if (z >= renderer.zbuffer[x][y]) {
-				// std::cout << v1n[X] << " " << v1n[Y] << " " << v1n[Z] << "\n";
+				renderer.zbuffer[x][y] = z;
 				Vector<3> norm{ normalFunc({x, y}).normalize() };
 				float intensity{ dot_product(renderer.light_dir, norm) };
 				if (intensity > 0) {
@@ -191,7 +190,6 @@ void draw_face(Renderer &renderer,
 							(uint8_t)(clr.b * intensity),
 							255}	
 							);	
-					renderer.zbuffer[x][y] = z;
 				}
 			}
 		}
@@ -223,7 +221,7 @@ findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
 	Vector<3> normal{ cross_product(v3 - v1, v2 - v1) };
 	if (normal[Z] == 0)
 		return [](const Point2D& p){ 
-			return std::numeric_limits<float>::min();  // normal has no z component
+			return -std::numeric_limits<float>::max();  // normal has no z component
 		};
 	float a{ normal[X] };
 	float b{ normal[Y] };
