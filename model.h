@@ -42,18 +42,6 @@ typedef struct TextureCoord_t {
 	}
 } TextureCoord;
 
-typedef struct Normal_t {
-	float x;
-	float y;
-	float z;
-	
-	Normal_t(float x, float y, float z) :
-		x{ x },
-		y{ y },
-		z{ z }
-	{}
-} Normal;
-
 // TODO parameter space verticies
 
 // index values of 0 for text and or normal will represent null values
@@ -85,16 +73,18 @@ class Model
 private:
     std::vector<Vector<3>> verticies;
 	std::vector<std::vector<FaceTuple>> faces;
+	std::vector<Vector<3>> normals;
 public:
     Model(std::string filename);
 	int nfaces() const;
 	Vector<3> vertex(int i) const;
+	Vector<3> normal(int i) const;
 	std::vector<FaceTuple> face(int i) const;
 };
 
 namespace ModelParsing
 {
-	Vector<3> parse_vertex(const std::string &line);
+	Vector<3> parse_vector(const std::string &line);
 	std::vector<FaceTuple> parse_face(const std::string &line);
 	FaceTuple parse_face_tuple(const std::string &line);
 	std::vector<std::string> split_string(const std::string &str);

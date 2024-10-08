@@ -13,7 +13,7 @@
 Renderer::Renderer() :
 	zbuffer{},
 	light_dir{ 0,  0, -1 },
-	pos{0, 0, -4} // maybe tweak this value later
+	pos{0, 0, 255} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -51,7 +51,9 @@ Renderer::~Renderer() {
 //=============================================================================
 void clear_screen(Renderer &renderer)
 {
-	set_color(renderer, {0, 0, 0, 255});
+	// make sure render color is black before clearing
+    SDL_SetRenderDrawColor(renderer.sdl_renderer, 0, 0, 0, 0);
+
 	SDL_RenderClear(renderer.sdl_renderer);
 	for (auto i = 0; i < renderer.zbuffer.size(); i++) {
 		for (auto j = 0; j < renderer.zbuffer[i].size(); j++) {
@@ -60,34 +62,30 @@ void clear_screen(Renderer &renderer)
 	}
 }
 
-void draw_point(Renderer& renderer, Point2D p)
-{
-	SDL_RenderDrawPoint(renderer.sdl_renderer, p.x, p.y);
-}
-
-void set_color(Renderer &renderer, Color clr)
+void draw_point(const Renderer& renderer, const Point2D &p, const Color &clr)
 {
     SDL_SetRenderDrawColor(renderer.sdl_renderer, 
             clr.r,
             clr.g,
             clr.b,
             clr.a);
-}
 
+	SDL_RenderDrawPoint(renderer.sdl_renderer, p.x, p.y);
+}
 
 //=============================================================================
 // Rendering Models
 //=============================================================================
 void draw_model(Renderer &renderer, const Model &model)
 {
-	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() };
-	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
-	Vector<3> y{ cross_product(z, x).normalize() };
+	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() }; 	// back-forward vector
+	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 				// left-right	vector
+	Vector<3> y{ cross_product(z, x).normalize() };							// up-down		vector
 
 	Matrix<4, 4> modelView{
-		{x[0], x[1], x[2], renderer.pos[0]},
-		{y[0], y[1], y[2], renderer.pos[1]},
-		{z[0], z[1], z[2], renderer.pos[2]},
+		{x[X], x[Y], x[Z], renderer.pos[0]},
+		{y[X], y[Y], y[Z], renderer.pos[1]},
+		{z[X], z[Y], z[Z], renderer.pos[2]},
 		{0.f,  0.f,  0.f,  1.f}	
 	};
 
@@ -108,46 +106,60 @@ void draw_model(Renderer &renderer, const Model &model)
 	};
 		
 	Matrix<4, 4> transMatrix{ viewPort * projMatrix * modelView};
+	Matrix<4, 4> normalTransMatrix{ inverse(transMatrix).transpose() };
 
 	for (int i = 0; i < model.nfaces(); i++) {
 		std::vector<FaceTuple> face = model.face(i);
+
+		// get v1 and transform it
 		Vector<3> v1{ model.vertex(face[0].vertex - 1) };
-		Vector<3> v1s{static_cast<Vector<4>>(transMatrix * v1.homogenize()).dehomogenize()};
+		v1 = Vector<4>(transMatrix * v1.homogenize()).dehomogenize();
+
+		// get normal and transform it
+		Vector<3> v1n{ model.normal(face[0].normal - 1) };
+		v1n = Vector<4>(normalTransMatrix * v1n.homogenize()).dehomogenize();
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
-			//Vector<3> v2{ project_vertex(tm, model.vertex(face[j-1].vertex - 1)) };
-			//Vector<3> v3{ project_vertex(tm, model.vertex(face[j].vertex - 1)) };
+			// get v2 and transform it
 			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
-			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
-			
-			// find the normal of vectors from v1 to v2 and v1 to v3
-			Vector<3> normal{ cross_product(v3 - v1, v2 - v1).normalize() };
-			float intensity{ dot_product(normal, renderer.light_dir) };
+			v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
 
-			// transform vectors for screen
-			Vector<3> v2s{static_cast<Vector<4>>(transMatrix * v2.homogenize()).dehomogenize()};
-			Vector<3> v3s{static_cast<Vector<4>>(transMatrix * v3.homogenize()).dehomogenize()};
-			
-			// intensity of light reflected will be equal to dot product of 
-			// view vector and normal of face
-			if (intensity > 0)
-				draw_face(renderer, v1s, v2s, v3s, 
-						{(uint8_t)(255 * intensity), 
-						 (uint8_t)(255 * intensity), 
-						 (uint8_t)(255 * intensity),
-						 255}
-						);
+			Vector<3> v2n{ model.normal(face[j-1].normal - 1) };
+			v2n = Vector<4>(normalTransMatrix * v2n.homogenize()).dehomogenize();
+
+			// get v3 and transform it
+			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
+			v3 = Vector<4>(transMatrix * v3.homogenize()).dehomogenize();
+
+			Vector<3> v3n{ model.normal(face[j].normal - 1) };
+			v3n = Vector<4>(normalTransMatrix * v3n.homogenize()).dehomogenize();
+
+						
+			draw_face(renderer, 
+					v1, v1n,
+					v2, v2n,
+					v3, v3n,
+					{255, 255, 255, 255}
+					);
 		}
 	}
 }
 
-void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Color color)
+void draw_face(Renderer &renderer, 
+		const Vector<3> &v1, 
+		const Vector<3> &v1n, 
+		const Vector<3> &v2, 
+		const Vector<3> &v2n, 
+		const Vector<3> &v3,
+		const Vector<3> &v3n,
+		const Color &clr)
 {
-	set_color(renderer, color);
-	
-	std::function<bool (const Vector<3> &)> edgeFunc{ get_edge_func(v1, v2, v3) };
-	std::function<float (const Point2D&)> solFunc{ findPlaneSolution(v1, v2, v3) };
+	auto edgeFunc{ get_edge_func(v1, v2, v3) };
+	auto solFunc{ findPlaneSolution(v1, v2, v3) };
+	auto normalFunc{ findNormalSolution(v1, v1n,
+										v2, v2n,
+										v3, v3n) };
 
 	// create a bounding box around our triangle
 	float maxX{ std::max({ v1[X], v2[X], v3[X] }) };	
@@ -165,11 +177,20 @@ void draw_face(Renderer &renderer, Vector<3> v1, Vector<3> v2, Vector<3> v3, Col
 	for (int x = minX; x <= maxX; x++) {
 		for (int y = minY; y <= maxY; y++) {
 			if (!edgeFunc({(float)x, (float)y, 0.f}))
-					continue;
+				continue;
 			float z{ solFunc({x, y}) };
 			if (z >= renderer.zbuffer[x][y]) {
-				draw_point(renderer, {x, y});	
 				renderer.zbuffer[x][y] = z;
+				Vector<3> norm{ normalFunc({x, y}).normalize() };
+				float intensity{ dot_product(renderer.light_dir, norm) };
+				if (intensity > 0) {
+					draw_point(renderer, {x, y}, 
+							{(uint8_t)(clr.r * intensity),
+							(uint8_t)(clr.g * intensity),
+							(uint8_t)(clr.b * intensity),
+							255}	
+							);	
+				}
 			}
 		}
 	}
@@ -194,12 +215,13 @@ get_edge_func(const Vector<3> &v1,  const Vector<3> &v2, const Vector<3> &v3)
 
 // given 3 points to define a plane return a function for solutions of 
 // Z given some X, Y.
-std::function<float (const Point2D&)> findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
+std::function<float (const Point2D&)> 
+findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
 {
 	Vector<3> normal{ cross_product(v3 - v1, v2 - v1) };
 	if (normal[Z] == 0)
 		return [](const Point2D& p){ 
-			return std::numeric_limits<float>::min();  // normal has no z component
+			return -std::numeric_limits<float>::max();  // normal has no z component
 		};
 	float a{ normal[X] };
 	float b{ normal[Y] };
@@ -209,5 +231,36 @@ std::function<float (const Point2D&)> findPlaneSolution(const Vector<3> &v1, con
 	float z0{ v1[Z] };
 	return [a, b, c, x0, y0, z0](const Point2D& p){ 
 		return (-a * (p.x - x0) - b * (p.y - y0))/c + z0;
+	};
+}
+
+float triangleArea(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
+{
+
+	Matrix<3, 3> m{
+		{v1[X], v2[X], 	v3[X]},
+		{v1[Y], v2[Y], 	v3[Y]},
+		{1.f, 	1.f, 	1.f}
+	};
+	return determinant(m)/2;
+}
+
+std::function<Vector<3> (const Point2D&)> 
+findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, 
+				   const Vector<3> &v2, const Vector<3> &v2n, 
+				   const Vector<3> &v3, const Vector<3> &v3n)
+{
+	// find the area of the triange formed by v1, v2, v3 in the x-y plane.
+	// we will use this with barycentric coordinates to extrapolate data 
+	// for values inside the triangles
+	float sarea{ triangleArea(v1, v2, v3) };
+	return [sarea, v1, v2, v3, v1n, v2n, v3n](const Point2D &p)
+	{
+		float px{ (float)p.x };
+		float py{ (float)p.y };
+		float s1{ triangleArea({px, py, 0.f}, v2, v3)/sarea };	
+		float s2{ triangleArea(v1, {px, py, 0.f}, v3)/sarea };	
+		float s3{ triangleArea(v1, v2, {px, py, 0.f})/sarea };	
+		return s1 * v1n + s2 * v2n + s3 * v3n;
 	};
 }

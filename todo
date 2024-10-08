@@ -1,3 +1,14 @@
 - we could greatly improve the speed of this...
 	- larger files cannot be renderered reliably at the moment
 	- maybe try some perf testing???
+- renderer object could use some refactoring its just got a bunch of junk in it
+
+- finish off drawing model
+- get the formatting right on the code it's all over the place
+
+- use bilinear interpolation for phong shading
+
+- first setup stuff required for adjusting normal values
+	- inverse matries
+	- adj matricies
+- organize these files holly smokes Eric

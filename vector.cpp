@@ -10,6 +10,8 @@ Vector<3> cross_product(const Vector<3> &v1, const Vector<3> &v2)
 	return nv;
 }
 
+float determinant(const Matrix<1, 1> &m) { return m[0][0]; }
+
 Vector<3> view_vector(float yaw, float pitch)
 {
 	float x{ std::sin(yaw) };
