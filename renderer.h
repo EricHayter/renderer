@@ -11,7 +11,7 @@
 
 #define SCREEN_WIDTH 900 // 640
 #define SCREEN_HEIGHT 900 // 480
-#define DEPTH 255
+#define DEPTH 900
 
 typedef struct {
     uint8_t r, g, b, a;
@@ -69,6 +69,9 @@ std::function<float (const Point2D&)>
 findPlaneSolution(const Vector<3> &v1, 
 				  const Vector<3> &v2, 
 				  const Vector<3> &v3);
+
+
+float triangleArea(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3);
 
 // given a plane with 3 verticies with a normal for each vertex
 // return a function to interpolate a normal for a given point (x,y) on the plane

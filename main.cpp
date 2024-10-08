@@ -14,13 +14,13 @@ int main(int argc, char** argv)
 		model_name = argv[1];
 
 	try {
-		int frames{32};
+		int frames{16};
 		Model model{ model_name };    
   		Renderer renderer{};
 		renderer.yaw = 0;
 		renderer.pitch = 0;
 		for (int i = 0; i < frames; i++) {
-			renderer.yaw = M_PI * i / frames;	
+			renderer.yaw = 1.f/4 * M_PI * i / frames;	
 
 			// let's time the execution time
 		    auto t1 = std::chrono::high_resolution_clock::now();
@@ -31,9 +31,11 @@ int main(int argc, char** argv)
 
 			SDL_RenderPresent(renderer.sdl_renderer);
 			clear_screen(renderer);
+			SDL_Delay(1000);
 		}
 	
 
+		SDL_Delay(1000 * 10);
 		SDL_Quit();
 	} catch (const char* ex) {
 		std::cout << ex << "\n";

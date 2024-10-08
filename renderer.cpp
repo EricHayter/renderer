@@ -13,7 +13,7 @@
 Renderer::Renderer() :
 	zbuffer{},
 	light_dir{ 0,  0, -1 },
-	pos{0, 0, -1} // maybe tweak this value later
+	pos{0, 0, 255} // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -78,14 +78,14 @@ void draw_point(const Renderer& renderer, const Point2D &p, const Color &clr)
 //=============================================================================
 void draw_model(Renderer &renderer, const Model &model)
 {
-	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() };
-	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 
-	Vector<3> y{ cross_product(z, x).normalize() };
+	Vector<3> z{ view_vector(renderer.yaw, renderer.pitch).normalize() }; 	// back-forward vector
+	Vector<3> x{ cross_product({0, 1, 0}, z).normalize() }; 				// left-right	vector
+	Vector<3> y{ cross_product(z, x).normalize() };							// up-down		vector
 
 	Matrix<4, 4> modelView{
-		{x[0], x[1], x[2], renderer.pos[0]},
-		{y[0], y[1], y[2], renderer.pos[1]},
-		{z[0], z[1], z[2], renderer.pos[2]},
+		{x[X], x[Y], x[Z], renderer.pos[0]},
+		{y[X], y[Y], y[Z], renderer.pos[1]},
+		{z[X], z[Y], z[Z], renderer.pos[2]},
 		{0.f,  0.f,  0.f,  1.f}	
 	};
 
@@ -117,7 +117,7 @@ void draw_model(Renderer &renderer, const Model &model)
 
 		// get normal and transform it
 		Vector<3> v1n{ model.normal(face[0].normal - 1) };
-		v1n = Vector<4>(normalTransMatrix * v1n.homogenize()).dehomogenize().normalize();
+		v1n = Vector<4>(normalTransMatrix * v1n.homogenize()).dehomogenize();
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
@@ -125,16 +125,17 @@ void draw_model(Renderer &renderer, const Model &model)
 			Vector<3> v2{ model.vertex(face[j-1].vertex - 1) };
 			v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
 
-			Vector<3> v2n{ model.vertex(face[j-1].normal - 1) };
-			v2n = Vector<4>(normalTransMatrix * v2n.homogenize()).dehomogenize().normalize();
+			Vector<3> v2n{ model.normal(face[j-1].normal - 1) };
+			v2n = Vector<4>(normalTransMatrix * v2n.homogenize()).dehomogenize();
 
 			// get v3 and transform it
 			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
 			v3 = Vector<4>(transMatrix * v3.homogenize()).dehomogenize();
 
-			Vector<3> v3n{ model.vertex(face[j].normal - 1) };
-			v3n = Vector<4>(normalTransMatrix * v3n.homogenize()).dehomogenize().normalize();
-			
+			Vector<3> v3n{ model.normal(face[j].normal - 1) };
+			v3n = Vector<4>(normalTransMatrix * v3n.homogenize()).dehomogenize();
+
+						
 			draw_face(renderer, 
 					v1, v1n,
 					v2, v2n,
@@ -178,7 +179,9 @@ void draw_face(Renderer &renderer,
 			if (!edgeFunc({(float)x, (float)y, 0.f}))
 					continue;
 			float z{ solFunc({x, y}) };
+			// std::cout << z << "\n";
 			if (z >= renderer.zbuffer[x][y]) {
+				// std::cout << v1n[X] << " " << v1n[Y] << " " << v1n[Z] << "\n";
 				Vector<3> norm{ normalFunc({x, y}).normalize() };
 				float intensity{ dot_product(renderer.light_dir, norm) };
 				if (intensity > 0) {
@@ -233,44 +236,33 @@ findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
 	};
 }
 
+float triangleArea(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
+{
+
+	Matrix<3, 3> m{
+		{v1[X], v2[X], 	v3[X]},
+		{v1[Y], v2[Y], 	v3[Y]},
+		{1.f, 	1.f, 	1.f}
+	};
+	return determinant(m)/2;
+}
+
 std::function<Vector<3> (const Point2D&)> 
 findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, 
 				   const Vector<3> &v2, const Vector<3> &v2n, 
 				   const Vector<3> &v3, const Vector<3> &v3n)
 {
-	return [v1n, v2n, v3n](const Point2D &p) { return 1.f/3 * (v1n + v2n + v3n); };
-	// disregard the z coordinate
-	// these will form our basis of R2
-	Vector<3> dv2{ v2 - v1 };
-	Vector<3> dv3{ v3 - v1 };
-
-	// check if these are co-linear in x and y
-	// also implicitly checks for zero vectors
-	if (dv3[X] * dv2[Y] == dv3[Y] * dv2[X])
-		return [dv3, dv2](const Point2D &p) { return cross_product(dv3, dv2); };
-
-	// make sure non-zero in top-left for RREF
-	if (dv3[X] == 0)
-		std::swap(dv3, dv2);
-	
-	// this is some row reduction to be hardcoded for R^2	
-	return [v1, dv3, dv2, v1n, v2n, v3n](const Point2D &p){
-		// find s, t such that np = s * dv1 + t * dv2
-		float s{};
-		float t{};
-		Point2D np{ (int)(p.x - v1[X]), (int)(p.y - v1[Y]) };
-
-		// reduce second row
-		if (dv3[Y] == 0) {
-			// NOTE: dv2[Y] has been checked to be non-zero at colinear check
-			t = np.y / dv2[Y];
-		} else {
-			t = np.y / dv3[X] - np.x;
-		}
-
-		// reduce first row
-		s = np.x / dv3[X] - t;
-
-		return v1n + s * (v3n - v1n) + t * (v2n - v1n); 
+	// find the area of the triange formed by v1, v2, v3 in the x-y plane.
+	// we will use this with barycentric coordinates to extrapolate data 
+	// for values inside the triangles
+	float sarea{ triangleArea(v1, v2, v3) };
+	return [sarea, v1, v2, v3, v1n, v2n, v3n](const Point2D &p)
+	{
+		float px{ (float)p.x };
+		float py{ (float)p.y };
+		float s1{ triangleArea({px, py, 0.f}, v2, v3)/sarea };	
+		float s2{ triangleArea(v1, {px, py, 0.f}, v3)/sarea };	
+		float s3{ triangleArea(v1, v2, {px, py, 0.f})/sarea };	
+		return s1 * v1n + s2 * v2n + s3 * v3n;
 	};
 }
