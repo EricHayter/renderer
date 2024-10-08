@@ -11,6 +11,7 @@ RELEASE_FLAGS = -O3
 DEBUG_FLAGS = -DEBUG -g3
 
 # Sources and object files
+FILES = main.cpp model.cpp renderer.cpp vector.cpp
 SOURCES = main.cpp model.cpp renderer.cpp vector.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
