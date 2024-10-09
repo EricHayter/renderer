@@ -4,6 +4,7 @@
 #include <SDL2/SDL_render.h>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <functional>
 #include <limits>
 
@@ -117,7 +118,7 @@ void draw_model(Renderer &renderer, const Model &model)
 
 		// get normal and transform it
 		Vector<3> v1n{ model.normal(face[0].normal - 1) };
-		v1n = Vector<4>(normalTransMatrix * v1n.homogenize()).dehomogenize();
+		v1n = Vector<4>(normalTransMatrix * v1n.homogenize()).dehomogenize().normalize();
 
 		// Triangle fanning
 		for (int j = 2; j < face.size(); j++) { // outer loop for start points
@@ -126,14 +127,14 @@ void draw_model(Renderer &renderer, const Model &model)
 			v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
 
 			Vector<3> v2n{ model.normal(face[j-1].normal - 1) };
-			v2n = Vector<4>(normalTransMatrix * v2n.homogenize()).dehomogenize();
+			v2n = Vector<4>(normalTransMatrix * v2n.homogenize()).dehomogenize().normalize();
 
 			// get v3 and transform it
 			Vector<3> v3{ model.vertex(face[j].vertex - 1) };
 			v3 = Vector<4>(transMatrix * v3.homogenize()).dehomogenize();
 
 			Vector<3> v3n{ model.normal(face[j].normal - 1) };
-			v3n = Vector<4>(normalTransMatrix * v3n.homogenize()).dehomogenize();
+			v3n = Vector<4>(normalTransMatrix * v3n.homogenize()).dehomogenize().normalize();
 
 						
 			draw_face(renderer, 
@@ -176,12 +177,12 @@ void draw_face(Renderer &renderer,
 
 	for (int x = minX; x <= maxX; x++) {
 		for (int y = minY; y <= maxY; y++) {
-			if (!edgeFunc({(float)x, (float)y, 0.f}))
+			if (!edgeFunc(x, y))
 				continue;
-			float z{ solFunc({x, y}) };
+			float z{ solFunc(x, y) };
 			if (z >= renderer.zbuffer[x][y]) {
 				renderer.zbuffer[x][y] = z;
-				Vector<3> norm{ normalFunc({x, y}).normalize() };
+				Vector<3> norm{ normalFunc(x, y).normalize() };
 				float intensity{ dot_product(renderer.light_dir, norm) };
 				if (intensity > 0) {
 					draw_point(renderer, {x, y}, 
@@ -196,18 +197,18 @@ void draw_face(Renderer &renderer,
 	}
 }
 
-std::function<bool (const Vector<3> &)> 
+std::function<bool (float x, float y)> 
 get_edge_func(const Vector<3> &v1,  const Vector<3> &v2, const Vector<3> &v3)
 {
-	return [v1, v2, v3](const Vector<3> &p){
+	return [v1, v2, v3](float x, float y){
 		bool ret{ true };
 		Vector<3> dv12{ v1 - v2 };
 		Vector<3> dv23{ v2 - v3 };
 		Vector<3> dv31{ v3 - v1 };
 
-		ret &= ((p[Y] - v1[Y])*dv12[X] - (p[X] - v1[X])*dv12[Y] >= 0);
-		ret &= ((p[Y] - v2[Y])*dv23[X] - (p[X] - v2[X])*dv23[Y] >= 0);
-		ret &= ((p[Y] - v3[Y])*dv31[X] - (p[X] - v3[X])*dv31[Y] >= 0);
+		ret &= ((y - v1[Y])*dv12[X] - (x - v1[X])*dv12[Y] >= 0);
+		ret &= ((y - v2[Y])*dv23[X] - (x - v2[X])*dv23[Y] >= 0);
+		ret &= ((y - v3[Y])*dv31[X] - (x - v3[X])*dv31[Y] >= 0);
 
 		return ret;	
 	};
@@ -215,12 +216,12 @@ get_edge_func(const Vector<3> &v1,  const Vector<3> &v2, const Vector<3> &v3)
 
 // given 3 points to define a plane return a function for solutions of 
 // Z given some X, Y.
-std::function<float (const Point2D&)> 
+std::function<float (float x, float y)> 
 findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
 {
 	Vector<3> normal{ cross_product(v3 - v1, v2 - v1) };
 	if (normal[Z] == 0)
-		return [](const Point2D& p){ 
+		return [](float x, float y){ 
 			return -std::numeric_limits<float>::max();  // normal has no z component
 		};
 	float a{ normal[X] };
@@ -229,8 +230,8 @@ findPlaneSolution(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3)
 	float x0{ v1[X] };
 	float y0{ v1[Y] };
 	float z0{ v1[Z] };
-	return [a, b, c, x0, y0, z0](const Point2D& p){ 
-		return (-a * (p.x - x0) - b * (p.y - y0))/c + z0;
+	return [a, b, c, x0, y0, z0](float x, float y){ 
+		return (-a * (x - x0) - b * (y - y0))/c + z0;
 	};
 }
 
@@ -245,7 +246,7 @@ float triangleArea(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3
 	return determinant(m)/2;
 }
 
-std::function<Vector<3> (const Point2D&)> 
+std::function<Vector<3> (float, float)> 
 findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, 
 				   const Vector<3> &v2, const Vector<3> &v2n, 
 				   const Vector<3> &v3, const Vector<3> &v3n)
@@ -254,13 +255,11 @@ findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n,
 	// we will use this with barycentric coordinates to extrapolate data 
 	// for values inside the triangles
 	float sarea{ triangleArea(v1, v2, v3) };
-	return [sarea, v1, v2, v3, v1n, v2n, v3n](const Point2D &p)
+	return [sarea, v1, v2, v3, v1n, v2n, v3n](float x, float y)
 	{
-		float px{ (float)p.x };
-		float py{ (float)p.y };
-		float s1{ triangleArea({px, py, 0.f}, v2, v3)/sarea };	
-		float s2{ triangleArea(v1, {px, py, 0.f}, v3)/sarea };	
-		float s3{ triangleArea(v1, v2, {px, py, 0.f})/sarea };	
+		float s1{ triangleArea({x, y, 0.f}, v2, v3)/sarea };	
+		float s2{ triangleArea(v1, {x, y, 0.f}, v3)/sarea };	
+		float s3{ triangleArea(v1, v2, {x, y, 0.f})/sarea };	
 		return s1 * v1n + s2 * v2n + s3 * v3n;
 	};
 }

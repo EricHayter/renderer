@@ -58,14 +58,14 @@ void draw_face(Renderer &renderer,
 // as a parameter and returns if the point is inside the triangle
 // using method found in: A Parallel Algorithm for Polygon Rasterization
 // by J. Pineda
-std::function<bool (const Vector<3> &)> 
+std::function<bool (float, float)> 
 get_edge_func(const Vector<3> &v1,  
 			  const Vector<3> &v2, 
 			  const Vector<3> &v3);
 
 // given 3 points to define a plane return a function that finds a solution 
 // on the plane given some parameter of a point (x, y)
-std::function<float (const Point2D&)> 
+std::function<float (float, float)> 
 findPlaneSolution(const Vector<3> &v1, 
 				  const Vector<3> &v2, 
 				  const Vector<3> &v3);
@@ -75,7 +75,7 @@ float triangleArea(const Vector<3> &v1, const Vector<3> &v2, const Vector<3> &v3
 
 // given a plane with 3 verticies with a normal for each vertex
 // return a function to interpolate a normal for a given point (x,y) on the plane
-std::function<Vector<3> (const Point2D&)> 
+std::function<Vector<3> (float, float)> 
 findNormalSolution(const Vector<3> &v1, const Vector<3> &v1n, 
 				   const Vector<3> &v2, const Vector<3> &v2n, 
 				   const Vector<3> &v3, const Vector<3> &v3n);

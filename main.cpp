@@ -5,7 +5,7 @@
 #include <math.h>
 #include <chrono>
 
-#define DEFAULT_MODEL "head.obj"
+#define DEFAULT_MODEL "obj_files/head.obj"
 
 int main(int argc, char** argv)
 {
