@@ -45,11 +45,13 @@ we finally started implementing some linear algebra functionality to properly
 transform points! This adde perspective rendering and the ability to rotate
 the models by adjusting yaw and pitch parameters of the rendering environment.
 
+![face generated using iteration 4 of my renderer](images/render_iter4.png)
+
+4. Phong shaders have been implemented! Using [Phong shading](https://en.wikipedia.org/wiki/Phong_shading)
+we are able to give models a more "smooth" look. Face normals are no longer
+calculated using just a cross product from the verticies but rather using
+the artist-provided normals and interpolating across the face.
+
 ## TODO :white_check_mark:
-- Currently working on the 4th iteration of the renderer which will include
-  [Phong shading](https://en.wikipedia.org/wiki/Phong_shading) giving models (ideally) a more smooth look than the current 
-  jagged edges.
-    - implement extra linear algebra tooling for calculating the transformation
-      matrix of normal vectors. :white_check_mark:
-    - implement a method of interpolating values of normal for points along
-      face. :black_square_button: 
+- still some tiny issues with phong shading with normal values around edge of face.
+- working on implementing iteration 5 which will allow for texture mapping!!
