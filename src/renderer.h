@@ -59,7 +59,7 @@ class Renderer {
     Renderer(Renderer& other) = delete;
     void operator=(const Renderer&) = delete;
 
-	// public fields
+    // public fields
     Vector<3> light_dir{0, 0, -1};
     Vector<3> pos{0, 0, 255};
     float yaw{};
@@ -79,7 +79,6 @@ class Renderer {
 };
 
 bool InsideTriangle(const Triangle& triangle, float x, float y);
-
 
 // given 3 points to define a plane return a function that finds a solution
 // on the plane given some parameter of a point (x, y)
