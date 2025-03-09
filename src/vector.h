@@ -3,16 +3,17 @@
 
 #include <cmath>
 #include <cstddef>
-#define X 0
-#define Y 1
-#define Z 2
-#define W 3
 
 #include <algorithm>
 #include <array>
 #include <initializer_list>
 #include <iostream>
 #include <stdexcept>
+
+constexpr std::size_t X = 0;
+constexpr std::size_t Y = 1;
+constexpr std::size_t Z = 2;
+constexpr std::size_t W = 3;
 
 template <size_t len>
 struct Vector;  // Forward declaration
