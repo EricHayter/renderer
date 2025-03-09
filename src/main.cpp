@@ -13,25 +13,32 @@ int main(int argc, char** argv) {
         model_name = argv[1];
 
     try {
-        int frames{16};
+        // let's time the execution time
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        int frames{100};
         Model model{model_name};
         Renderer* renderer = Renderer::GetRenderer();
         renderer->yaw = 0;
         renderer->pitch = 0;
         for (int i = 0; i < frames; i++) {
-            renderer->yaw = 1.f / 4 * M_PI * i / frames;
+            renderer->yaw = 1.f / 4.f * M_PI_2f * static_cast<float>(i) / static_cast<float>(frames);
 
-            // let's time the execution time
-            auto t1 = std::chrono::high_resolution_clock::now();
             renderer->draw_model(model);
-            auto t2 = std::chrono::high_resolution_clock::now();
-            auto ms_int =
-                std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-            std::cout << "took " << ms_int.count() << " milliseconds\n";
 
             renderer->clear_screen();
         }
-        SDL_Delay(1000 * 10);
+        auto stop_time = std::chrono::high_resolution_clock::now();
+        long milliseconds_elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(stop_time -
+                                                                  start_time)
+                .count();
+        std::cout << "It took " << milliseconds_elapsed
+                  << " milliseconds to print " << frames << " frames ("
+                  << static_cast<float>(milliseconds_elapsed) /
+                         static_cast<float>(frames)
+                  << " FPS)\n";
+
     } catch (const char* ex) {
         std::cout << ex << "\n";
     }
