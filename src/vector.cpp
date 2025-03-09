@@ -13,6 +13,10 @@ float determinant(const Matrix<1, 1>& m) {
     return m[0][0];
 }
 
+float determinant(const Matrix<2, 2>& m) {
+    return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+}
+
 Vector<3> view_vector(float yaw, float pitch) {
     float x{std::sin(yaw)};
     float y{std::sin(pitch)};
