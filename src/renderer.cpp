@@ -13,13 +13,13 @@
 // Renderer Object
 //=============================================================================
 
-Renderer* Renderer::renderer_ = nullptr;;
+Renderer* Renderer::renderer_ = nullptr;
 
 Renderer* Renderer::GetRenderer() {
-	if(renderer_ == nullptr) {
-		renderer_ = new Renderer();
-	}
-	return renderer_;
+    if (renderer_ == nullptr) {
+        renderer_ = new Renderer();
+    }
+    return renderer_;
 }
 
 Renderer::Renderer()
@@ -33,8 +33,8 @@ Renderer::Renderer()
     }
 
     window_ = SDL_CreateWindow("renderer", SDL_WINDOWPOS_UNDEFINED,
-                              SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-                              SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+                               SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
+                               SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
     if (window_ == NULL) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
@@ -54,7 +54,7 @@ Renderer::Renderer()
 Renderer::~Renderer() {
     SDL_DestroyWindow(window_);
     SDL_Quit();
-	delete renderer_;
+    delete renderer_;
 }
 
 //=============================================================================
@@ -81,7 +81,7 @@ void Renderer::draw_point(float x, float y, const Color& clr) {
 // Rendering Models
 //=============================================================================
 void Renderer::draw_model(const Model& model) {
-    Vector<3> z{view_vector(yaw, pitch).normalize()};  // back-forward vec
+    Vector<3> z{view_vector(yaw, pitch).normalize()};      // back-forward vec
     Vector<3> x{cross_product({0, 1, 0}, z).normalize()};  // left-right vec
     Vector<3> y{cross_product(z, x).normalize()};          // up-down vec
 
@@ -109,53 +109,53 @@ void Renderer::draw_model(const Model& model) {
         std::vector<FaceTuple> face = model.face(i);
 
         // get v1 and transform it
-        Vector<3> v1{model.vertex(face[0].vertex - 1)};
+        Vector<3> v1{model.vertex(face[0].vertex)};
         v1 = Vector<4>(transMatrix * v1.homogenize()).dehomogenize();
 
         // get normal and transform it
-        Vector<3> v1n{model.normal(face[0].normal - 1)};
+        Vector<3> v1n{model.normal(face[0].normal)};
         v1n = Vector<4>(normalTransMatrix * v1n.homogenize())
                   .dehomogenize()
                   .normalize();
 
         // triangle fan the face polygon (most of the time this is just a
-		// triangle.
+        // triangle.
         for (int j = 2; j < face.size(); j++) {  // outer loop for start points
             // get v2 and transform it
-            Vector<3> v2{model.vertex(face[j - 1].vertex - 1)};
+            Vector<3> v2{model.vertex(face[j - 1].vertex)};
             v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
 
-            Vector<3> v2n{model.normal(face[j - 1].normal - 1)};
+            Vector<3> v2n{model.normal(face[j - 1].normal)};
             v2n = Vector<4>(normalTransMatrix * v2n.homogenize())
                       .dehomogenize()
                       .normalize();
 
             // get v3 and transform it
-            Vector<3> v3{model.vertex(face[j].vertex - 1)};
+            Vector<3> v3{model.vertex(face[j].vertex)};
             v3 = Vector<4>(transMatrix * v3.homogenize()).dehomogenize();
 
-            Vector<3> v3n{model.normal(face[j].normal - 1)};
+            Vector<3> v3n{model.normal(face[j].normal)};
             v3n = Vector<4>(normalTransMatrix * v3n.homogenize())
                       .dehomogenize()
                       .normalize();
-			Triangle triangle{{
-				{v1, v1n},
-				{v2, v2n},
-				{v3, v3n},
-			}};
-            draw_face(triangle,{255, 255, 255, 255});
+            Triangle triangle{{
+                {v1, v1n},
+                {v2, v2n},
+                {v3, v3n},
+            }};
+            draw_face(triangle, {255, 255, 255, 255});
         }
     }
     SDL_RenderPresent(sdl_renderer_);
 }
 
 void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
-	Vector<3> v1 = triangle[0].pos;
-	Vector<3> v1n = triangle[0].norm;
-	Vector<3> v2 = triangle[1].pos;
-	Vector<3> v2n = triangle[1].norm;
-	Vector<3> v3 = triangle[2].pos;
-	Vector<3> v3n = triangle[2].norm;
+    Vector<3> v1 = triangle[0].pos;
+    Vector<3> v1n = triangle[0].norm;
+    Vector<3> v2 = triangle[1].pos;
+    Vector<3> v2n = triangle[1].norm;
+    Vector<3> v3 = triangle[2].pos;
+    Vector<3> v3n = triangle[2].norm;
 
     auto edgeFunc{get_edge_func(v1, v2, v3)};
     auto solFunc{findPlaneSolution(v1, v2, v3)};
@@ -184,7 +184,7 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
                 Vector<3> norm{normalFunc(x, y).normalize()};
                 float intensity{dot_product(light_dir, norm)};
                 if (intensity > 0) {
-                    draw_point( x, y,
+                    draw_point(x, y,
                                {(uint8_t)(clr.r * intensity),
                                 (uint8_t)(clr.g * intensity),
                                 (uint8_t)(clr.b * intensity), 255});

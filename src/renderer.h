@@ -5,15 +5,15 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 #include <array>
-#include <memory>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include "model.h"
 #include "vector.h"
 
-constexpr int SCREEN_WIDTH =  900;
+constexpr int SCREEN_WIDTH = 900;
 constexpr int SCREEN_HEIGHT = 900;
-constexpr int DEPTH =  900;
+constexpr int DEPTH = 900;
 
 // Color struct with 4 8-bit channels.
 struct Color {
@@ -26,8 +26,8 @@ struct Point2D {
 };
 
 struct VertexPair {
-	Vector<3> pos;
-	Vector<3> norm;
+    Vector<3> pos;
+    Vector<3> norm;
 };
 
 using Triangle = std::array<VertexPair, 3>;
@@ -38,27 +38,27 @@ using Triangle = std::array<VertexPair, 3>;
  * window handles.
  */
 class Renderer {
-protected:
-	Renderer();
+   protected:
+    Renderer();
     ~Renderer();
-	static Renderer* renderer_;
+    static Renderer* renderer_;
 
-public:
-	// Singleton instance getter
-	static Renderer* GetRenderer();
+   public:
+    // Singleton instance getter
+    static Renderer* GetRenderer();
 
-	// blacks out the entire screen and resets the value of z-buffer
-	void clear_screen();
+    // blacks out the entire screen and resets the value of z-buffer
+    void clear_screen();
 
-	// draws a point of given color on the screen
-	void draw_point(float x, float y, const Color& clr);
+    // draws a point of given color on the screen
+    void draw_point(float x, float y, const Color& clr);
 
-	// render a triangular face with appropriate shading and coloring using
-	// Phong shading.
-	void draw_face(const Triangle& v1, const Color& clr);
+    // render a triangular face with appropriate shading and coloring using
+    // Phong shading.
+    void draw_face(const Triangle& v1, const Color& clr);
 
-	// render the given model
-	void draw_model(const Model& model);
+    // render the given model
+    void draw_model(const Model& model);
 
     // The Renderer should not be cloneable or assignable (singleton)
     Renderer(Renderer& other) = delete;
@@ -69,19 +69,15 @@ public:
     float yaw;
     float pitch;
 
-private:
+   private:
     SDL_Renderer* sdl_renderer_;
     SDL_Window* window_;
 
-	// zbuffer allows for keeping track of "layers" when printing multiple
-	// colors at the same (x,y) pairs put different depths relative to the 
-	// camera.
+    // zbuffer allows for keeping track of "layers" when printing multiple
+    // colors at the same (x,y) pairs put different depths relative to the
+    // camera.
     std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer_;
 };
-
-
-
-
 
 // given 3 points to define a triangle return a function that takes a point
 // as a parameter and returns if the point is inside the triangle
