@@ -23,9 +23,6 @@ Renderer* Renderer::GetRenderer() {
 }
 
 Renderer::Renderer()
-    : zbuffer_{},
-      light_dir{0, 0, -1},
-      pos{0, 0, 255}  // maybe tweak this value later
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -44,8 +41,8 @@ Renderer::Renderer()
     sdl_renderer_ = SDL_CreateRenderer(window_, -1, 0);
 
     // set the zbuffer entries to be as far back as possible
-    for (auto i = 0; i < zbuffer_.size(); i++) {
-        for (auto j = 0; j < zbuffer_[i].size(); j++) {
+    for (std::size_t i = 0; i < zbuffer_.size(); i++) {
+        for (std::size_t j = 0; j < zbuffer_[i].size(); j++) {
             zbuffer_[i][j] = -std::numeric_limits<float>::max();
         }
     }
@@ -65,16 +62,16 @@ void Renderer::clear_screen() {
     SDL_SetRenderDrawColor(sdl_renderer_, 0, 0, 0, 0);
 
     SDL_RenderClear(sdl_renderer_);
-    for (auto i = 0; i < zbuffer_.size(); i++) {
-        for (auto j = 0; j < zbuffer_[i].size(); j++) {
+    for (std::size_t i = 0; i < zbuffer_.size(); i++) {
+        for (std::size_t j = 0; j < zbuffer_[i].size(); j++) {
             zbuffer_[i][j] = -std::numeric_limits<float>::max();
         }
     }
 }
 
-void Renderer::draw_point(float x, float y, const Color& clr) {
+void Renderer::draw_point(unsigned int x, unsigned int y, const Color& clr) {
     SDL_SetRenderDrawColor(sdl_renderer_, clr.r, clr.g, clr.b, clr.a);
-    SDL_RenderDrawPoint(sdl_renderer_, x, y);
+    SDL_RenderDrawPoint(sdl_renderer_, static_cast<int>(x), static_cast<int>(y));
 }
 
 //=============================================================================
@@ -98,7 +95,7 @@ void Renderer::draw_model(const Model& model) {
 
     // this will scale our points to appropriate sizes for our screen
     Matrix<4, 4> viewPort{{SCREEN_WIDTH / 2.f, 0, 0, SCREEN_WIDTH / 2.f},
-                          {0, -SCREEN_HEIGHT / 2.f, 0, SCREEN_HEIGHT / 2.f},
+                          {0, -static_cast<int>(SCREEN_HEIGHT) / 2.f, 0, SCREEN_HEIGHT / 2.f},
                           {0, 0, DEPTH / 2.f, DEPTH / 2.f},
                           {0, 0, 0, 1.f}};
 
@@ -120,7 +117,7 @@ void Renderer::draw_model(const Model& model) {
 
         // triangle fan the face polygon (most of the time this is just a
         // triangle.
-        for (int j = 2; j < face.size(); j++) {  // outer loop for start points
+        for (std::size_t j = 2; j < face.size(); j++) {  // outer loop for start points
             // get v2 and transform it
             Vector<3> v2{model.vertex(face[j - 1].vertex)};
             v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
@@ -151,37 +148,25 @@ void Renderer::draw_model(const Model& model) {
 
 void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
     Vector<3> v1 = triangle[0].pos;
-    Vector<3> v1n = triangle[0].norm;
     Vector<3> v2 = triangle[1].pos;
-    Vector<3> v2n = triangle[1].norm;
     Vector<3> v3 = triangle[2].pos;
-    Vector<3> v3n = triangle[2].norm;
 
-    auto edgeFunc{get_edge_func(v1, v2, v3)};
     auto solFunc{findPlaneSolution(v1, v2, v3)};
-    auto normalFunc{findNormalSolution(v1, v1n, v2, v2n, v3, v3n)};
 
-    // create a bounding box around our triangle
-    float maxX{std::max({v1[X], v2[X], v3[X]})};
-    maxX = maxX >= SCREEN_WIDTH ? SCREEN_WIDTH - 1 : maxX;
+    // create a bounding box around the triangle on the screen
+	unsigned int maxX = std::min({static_cast<unsigned int>(std::max({v1[X], v2[X], v3[X]})), SCREEN_WIDTH - 1});	
+    unsigned int minX = std::max({static_cast<unsigned int>(std::min({v1[X], v2[X], v3[X]})), 0u});
+	unsigned int maxY = std::min({static_cast<unsigned int>(std::max({v1[Y], v2[Y], v3[Y]})), SCREEN_HEIGHT - 1});	
+    unsigned int minY = std::max({static_cast<unsigned int>(std::min({v1[Y], v2[Y], v3[Y]})), 0u});
 
-    float minX{std::min({v1[X], v2[X], v3[X]})};
-    minX = minX <= 0 ? 0 : minX;
-
-    float maxY{std::max({v1[Y], v2[Y], v3[Y]})};
-    maxY = maxY >= SCREEN_HEIGHT ? SCREEN_HEIGHT - 1 : maxY;
-
-    float minY{std::min({v1[Y], v2[Y], v3[Y]})};
-    minY = minY <= 0 ? 0 : minY;
-
-    for (int x = minX; x <= maxX; x++) {
-        for (int y = minY; y <= maxY; y++) {
-            if (!edgeFunc(x, y))
+    for (unsigned int x = minX; x < maxX; x++) {
+        for (unsigned int y = minY; y < maxY; y++) {
+            if (not InsideTriangle(triangle, static_cast<float>(x), static_cast<float>(y)))
                 continue;
             float z{solFunc(x, y)};
             if (z >= zbuffer_[x][y]) {
                 zbuffer_[x][y] = z;
-                Vector<3> norm{normalFunc(x, y).normalize()};
+                Vector<3> norm{findNormalSolution(triangle, static_cast<float>(x), static_cast<float>(y)).normalize()};
                 float intensity{dot_product(light_dir, norm)};
                 if (intensity > 0) {
                     draw_point(x, y,
@@ -194,21 +179,26 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
     }
 }
 
-std::function<bool(float x, float y)> get_edge_func(const Vector<3>& v1,
-                                                    const Vector<3>& v2,
-                                                    const Vector<3>& v3) {
-    return [v1, v2, v3](float x, float y) {
-        bool ret{true};
-        Vector<3> dv12{v1 - v2};
-        Vector<3> dv23{v2 - v3};
-        Vector<3> dv31{v3 - v1};
+// given a triangle in a 2D space determine if a point (x, y) is contained
+// inside of the triangle.
+//
+// This function is using method found in: A Parallel Algorithm for Polygon
+// Rasterization by J. Pineda
+bool InsideTriangle(const Triangle& triangle, float x, float y) {
+	Vector<3> p1 = triangle[0].pos;
+	Vector<3> p2 = triangle[1].pos;
+	Vector<3> p3 = triangle[2].pos;
 
-        ret &= ((y - v1[Y]) * dv12[X] - (x - v1[X]) * dv12[Y] >= 0);
-        ret &= ((y - v2[Y]) * dv23[X] - (x - v2[X]) * dv23[Y] >= 0);
-        ret &= ((y - v3[Y]) * dv31[X] - (x - v3[X]) * dv31[Y] >= 0);
+	bool ret{true};
+	Vector<3> dp12{p1 - p2};
+	Vector<3> dp23{p2 - p3};
+	Vector<3> dp31{p3 - p1};
 
-        return ret;
-    };
+	ret &= ((y - p1[Y]) * dp12[X] - (x - p1[X]) * dp12[Y] >= 0);
+	ret &= ((y - p2[Y]) * dp23[X] - (x - p2[X]) * dp23[Y] >= 0);
+	ret &= ((y - p3[Y]) * dp31[X] - (x - p3[X]) * dp31[Y] >= 0);
+
+	return ret;
 }
 
 // given 3 points to define a plane return a function for solutions of
@@ -218,7 +208,7 @@ std::function<float(float x, float y)> findPlaneSolution(const Vector<3>& v1,
                                                          const Vector<3>& v3) {
     Vector<3> normal{cross_product(v3 - v1, v2 - v1)};
     if (normal[Z] == 0)
-        return [](float x, float y) {
+        return [](float /* x */, float /* y */) {
             return -std::numeric_limits<float>::max();  // normal has no z
                                                         // component
         };
@@ -233,29 +223,41 @@ std::function<float(float x, float y)> findPlaneSolution(const Vector<3>& v1,
     };
 }
 
-float triangleArea(const Vector<3>& v1,
-                   const Vector<3>& v2,
-                   const Vector<3>& v3) {
+// find the area of a triangle
+float triangleArea(const Vector<3>& p1,
+                   const Vector<3>& p2,
+                   const Vector<3>& p3) {
+
+	// this function makes use of a special property of the determinant to find the area of the triangle
     Matrix<3, 3> m{
-        {v1[X], v2[X], v3[X]}, {v1[Y], v2[Y], v3[Y]}, {1.f, 1.f, 1.f}};
+        {p1[X], p2[X], p3[X]}, 
+		{p1[Y], p2[Y], p3[Y]},
+		{1.f, 1.f, 1.f}
+	};
     return determinant(m) / 2;
 }
 
-std::function<Vector<3>(float, float)> findNormalSolution(
-    const Vector<3>& v1,
-    const Vector<3>& v1n,
-    const Vector<3>& v2,
-    const Vector<3>& v2n,
-    const Vector<3>& v3,
-    const Vector<3>& v3n) {
-    // find the area of the triange formed by v1, v2, v3 in the x-y plane.
+// Find the area of a triangle
+float triangleArea(const Triangle& triangle) {
+	Vector<3> p1 = triangle[0].pos;
+	Vector<3> p2 = triangle[1].pos;
+	Vector<3> p3 = triangle[2].pos;
+	
+	return triangleArea(p1, p2, p3);
+}
+
+
+Vector<3> findNormalSolution(const Triangle &triangle, float x, float y) {
+    // find the area of the triangle formed by v1, v2, v3 in the x-y plane.
     // we will use this with barycentric coordinates to extrapolate data
     // for values inside the triangles
-    float sarea{triangleArea(v1, v2, v3)};
-    return [sarea, v1, v2, v3, v1n, v2n, v3n](float x, float y) {
-        float s1{triangleArea({x, y, 0.f}, v2, v3) / sarea};
-        float s2{triangleArea(v1, {x, y, 0.f}, v3) / sarea};
-        float s3{triangleArea(v1, v2, {x, y, 0.f}) / sarea};
-        return s1 * v1n + s2 * v2n + s3 * v3n;
-    };
+	VertexPair v1 = triangle[0];
+	VertexPair v2 = triangle[1];
+	VertexPair v3 = triangle[2];
+    float sarea{triangleArea(triangle)};
+
+	float s1{triangleArea({x, y, 0.f}, v2.pos, v3.pos) / sarea};
+	float s2{triangleArea(v1.pos, {x, y, 0.f}, v3.pos) / sarea};
+	float s3{triangleArea(v1.pos, v2.pos, {x, y, 0.f}) / sarea};
+	return s1 * v1.norm + s2 * v2.norm + s3 * v3.norm;
 }
