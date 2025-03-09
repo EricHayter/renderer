@@ -73,28 +73,29 @@ FaceTuple ModelParsing::parse_face_tuple(const std::string& line) {
     int vertex_index{0};
 
     if (stop == -1) {
-        vertex_index = std::stoi(line.substr(start, line.length()));
+        vertex_index = std::stoi(line.substr(start, line.length())) - 1;
         return {vertex_index};
     } else {
-        vertex_index = std::stoi(line.substr(start, stop - start));
+        vertex_index = std::stoi(line.substr(start, stop - start)) - 1;
     }
 
     start = stop + 1;
     stop = line.find('/', start);
     int vertex_texture_index{0};
     if (stop == -1) {
-        vertex_texture_index = std::stoi(line.substr(start, line.length()));
+        vertex_texture_index = std::stoi(line.substr(start, line.length())) - 1;
         return {vertex_index, vertex_texture_index};
     } else {
         if (stop - start == 0)  // in case of no second argument i.e. u//w
             vertex_texture_index = 0;
         else
-            vertex_texture_index = std::stoi(line.substr(start, stop - start));
+            vertex_texture_index =
+                std::stoi(line.substr(start, stop - start)) - 1;
     }
 
     int vertex_normal_index{0};
     start = stop + 1;
-    vertex_normal_index = std::stoi(line.substr(start, line.length()));
+    vertex_normal_index = std::stoi(line.substr(start, line.length())) - 1;
     return {vertex_index, vertex_texture_index, vertex_normal_index};
 }
 
