@@ -30,8 +30,6 @@ typedef struct TextureCoord_t {
     }
 } TextureCoord;
 
-// TODO parameter space verticies
-
 // index values of 0 for text and or normal will represent null values
 // need to handle case for entries in first and third location but not second
 typedef struct FaceTuple_t {
@@ -48,20 +46,20 @@ typedef struct FaceTuple_t {
 
 class Model {
    private:
-    std::vector<Vector<3>> verticies;
+    std::vector<Vector<4>> verticies;
     std::vector<std::vector<FaceTuple>> faces;
-    std::vector<Vector<3>> normals;
+    std::vector<Vector<4>> normals;
 
    public:
     Model(std::string filename);
     int nfaces() const;
-    Vector<3> vertex(int i) const;
-    Vector<3> normal(int i) const;
+    Vector<4> vertex(int i) const;
+    Vector<4> normal(int i) const;
     std::vector<FaceTuple> face(int i) const;
 };
 
 namespace ModelParsing {
-Vector<3> parse_vector(const std::string& line);
+Vector<4> parse_vector(const std::string& line);
 std::vector<FaceTuple> parse_face(const std::string& line);
 FaceTuple parse_face_tuple(const std::string& line);
 std::vector<std::string> split_string(const std::string& str);

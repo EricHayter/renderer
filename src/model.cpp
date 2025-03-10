@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 Model::Model(std::string filename) : verticies{}, faces{}, normals{} {
@@ -18,7 +19,7 @@ Model::Model(std::string filename) : verticies{}, faces{}, normals{} {
         if (line.length() == 0)
             continue;
 
-        std::string entry_type{line.substr(0, line.find(' '))};
+        std::string_view entry_type{line.substr(0, line.find(' '))};
         if (entry_type == "v")
             verticies.push_back(ModelParsing::parse_vector(line));
         if (entry_type == "f")
@@ -34,11 +35,11 @@ int Model::nfaces() const {
     return faces.size();
 }
 
-Vector<3> Model::vertex(int i) const {
+Vector<4> Model::vertex(int i) const {
     return verticies[i];
 }
 
-Vector<3> Model::normal(int i) const {
+Vector<4> Model::normal(int i) const {
     return normals[i];
 }
 
@@ -47,11 +48,16 @@ std::vector<FaceTuple> Model::face(int i) const {
 }
 
 // given a string of input get the vertex value
-Vector<3> ModelParsing::parse_vector(const std::string& line) {
+Vector<4> ModelParsing::parse_vector(const std::string& line) {
     // ignoring w entry for simplicity
     std::vector<std::string> split_strs{ModelParsing::split_string(line)};
-    return {std::stof(split_strs[1]),  // don't count 'v' char
-            std::stof(split_strs[2]), std::stof(split_strs[3])};
+
+    return {
+			std::stof(split_strs[1]),  // don't count 'v' char
+            std::stof(split_strs[2]), 
+			std::stof(split_strs[3]),
+			split_strs.size() == 5 ? std::stof(split_strs[4]) : 1.f // vectors may optionally include the 'w' index for the vector otherwise if not provided default to 1.0
+	};
 }
 
 std::vector<FaceTuple> ModelParsing::parse_face(const std::string& line) {
