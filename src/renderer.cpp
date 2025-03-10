@@ -78,7 +78,7 @@ void Renderer::draw_point(unsigned int x, unsigned int y, const Color& clr) {
 // Rendering Models
 //=============================================================================
 void Renderer::draw_model(const Model& model) {
-    Vector<3> z{view_vector(yaw, pitch).normalize()};      // back-forward vec
+    Vector<3> z{view_vector(yaw, pitch)};      // back-forward vec
     Vector<3> x{cross_product({0, 1, 0}, z).normalize()};  // left-right vec
     Vector<3> y{cross_product(z, x).normalize()};          // up-down vec
 
@@ -106,42 +106,26 @@ void Renderer::draw_model(const Model& model) {
     for (int i = 0; i < model.nfaces(); i++) {
         std::vector<FaceTuple> face = model.face(i);
 
-        // get v1 and transform it
-        Vector<3> v1{model.vertex(face[0].vertex)};
-        v1 = Vector<4>(transMatrix * v1.homogenize()).dehomogenize();
-
-        // get normal and transform it
-        Vector<3> v1n{model.normal(face[0].normal)};
-        v1n = Vector<4>(normalTransMatrix * v1n.homogenize())
-                  .dehomogenize()
-                  .normalize();
+		// transform the point and normal
+        Vector<3> v1 = (transMatrix * model.vertex(face[0].vertex)).dehomogenize();
+        Vector<3> v1n = (normalTransMatrix * model.normal(face[0].normal)).dehomogenize().normalize();
 
         // triangle fan the face polygon (most of the time this is just a
-        // triangle.
-        for (std::size_t j = 2; j < face.size();
-             j++) {  // outer loop for start points
-            // get v2 and transform it
-            Vector<3> v2{model.vertex(face[j - 1].vertex)};
-            v2 = Vector<4>(transMatrix * v2.homogenize()).dehomogenize();
+        // triangle. outer loop for start points
+        for (std::size_t j = 2; j < face.size(); j++) { 
+            // get the position and normal of the second point and transform them
+            Vector<3> v2 = (transMatrix * model.vertex(face[j - 1].vertex)).dehomogenize();
+            Vector<3> v2n = (normalTransMatrix * model.normal(face[j - 1].normal)).dehomogenize().normalize();
 
-            Vector<3> v2n{model.normal(face[j - 1].normal)};
-            v2n = Vector<4>(normalTransMatrix * v2n.homogenize())
-                      .dehomogenize()
-                      .normalize();
+            // get the position and normal of the third point and transform them
+            Vector<3> v3 = (transMatrix * model.vertex(face[j].vertex)).dehomogenize();
+            Vector<3> v3n = (normalTransMatrix * model.normal(face[j].normal)).dehomogenize().normalize();
 
-            // get v3 and transform it
-            Vector<3> v3{model.vertex(face[j].vertex)};
-            v3 = Vector<4>(transMatrix * v3.homogenize()).dehomogenize();
-
-            Vector<3> v3n{model.normal(face[j].normal)};
-            v3n = Vector<4>(normalTransMatrix * v3n.homogenize())
-                      .dehomogenize()
-                      .normalize();
             Triangle triangle{{
                 {v1, v1n},
                 {v2, v2n},
-                {v3, v3n},
-            }};
+                {v3, v3n}
+			}};
             draw_face(triangle, {255, 255, 255, 255});
         }
     }
@@ -177,9 +161,8 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
                 zbuffer_[x][y] = z;
                 Vector<3> norm{findNormalSolution(triangle,
                                                   static_cast<float>(x),
-                                                  static_cast<float>(y))
-                                   .normalize()};
-                float intensity{dot_product(light_dir, norm)};
+                                                  static_cast<float>(y))};
+                float intensity{dot_product(light_dir, norm.normalize())};
                 if (intensity > 0) {
                     draw_point(x, y,
                                {(uint8_t)(clr.r * intensity),
@@ -235,14 +218,16 @@ std::function<float(float x, float y)> findPlaneSolution(const Vector<3>& v1,
     };
 }
 
-// find the area of a triangle
+// find the area of a triangle in from a 2D perspective projected onto the X-Y plane.
 float triangleArea(const Vector<3>& p1,
                    const Vector<3>& p2,
                    const Vector<3>& p3) {
     // this function makes use of a special property of the determinant to find
     // the area of the triangle
     Matrix<3, 3> m{
-        {p1[X], p2[X], p3[X]}, {p1[Y], p2[Y], p3[Y]}, {1.f, 1.f, 1.f}};
+        {p1[X], p2[X], p3[X]}, 
+		{p1[Y], p2[Y], p3[Y]}, 
+		{1.f, 1.f, 1.f}};
     return determinant(m) / 2;
 }
 

@@ -60,8 +60,8 @@ class Renderer {
     void operator=(const Renderer&) = delete;
 
     // public fields
-    Vector<3> light_dir{0, 0, -1};
-    Vector<3> pos{0, 0, 255};
+    Vector<3> light_dir{0.f, 0.f, -1.f};
+    Vector<3> pos{0.f, 0.f, 255.f};
     float yaw{};
     float pitch{};
 
