@@ -9,6 +9,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 
 constexpr std::size_t X = 0;
 constexpr std::size_t Y = 1;
@@ -169,15 +170,23 @@ std::ostream& operator<<(std::ostream& out, const Matrix<rows, cols>& m) {
 }
 
 template <size_t len>
-struct Vector : public Matrix<len, 1> {
-    Vector() : Matrix<len, 1>{} {};
-    Vector(const Matrix<len, 1>& m) : Matrix<len, 1>{m} {};
-    Vector(std::initializer_list<float> v) : Matrix<len, 1>{} {
-        if (v.size() != len)
-            throw "Invalid number of arguments!";
-        for (size_t i = 0; i < v.size(); i++)
-            this->m[i][0] = v.begin()[i];
-    };
+class Vector {
+	public:
+    Vector() = default;
+
+	Vector(std::array<float, len> arr) {
+		data = arr;
+	}
+
+    // Constructor that takes an initializer list
+    Vector(std::initializer_list<float> args) {
+        if (args.size() != len) {
+            throw std::invalid_argument("Number of arguments must match the size of the vector");
+        }
+
+        // Initialize the array from the initializer list
+        std::copy(args.begin(), args.end(), data.begin());
+    }
 
     // Arithmetic operator overloading
     Vector<len> operator+(const Vector<len>& v) const {
@@ -195,9 +204,8 @@ struct Vector : public Matrix<len, 1> {
     }
 
     // Subscript operator overloading
-    const float& operator[](size_t i) const { return this->m[i][0]; }
-
-    float& operator[](size_t i) { return this->m[i][0]; }
+    const float& operator[](size_t i) const { return data[i]; }
+    float& operator[](size_t i) { return data[i]; }
 
     Vector<len> normalize() const {
         float magn{};
@@ -232,8 +240,7 @@ struct Vector : public Matrix<len, 1> {
             nv[i] = (*this)[i];
 
         // check if it is a "vector" and not a point
-        if ((*this)[len - 1] ==
-            0)  // no need to divide if it's a vector and not a point
+        if ((*this)[len - 1] == 0)
             return nv;
 
         // normalize remaining coordinates
@@ -242,6 +249,9 @@ struct Vector : public Matrix<len, 1> {
 
         return nv;
     }
+
+	private:
+	std::array<float, len> data{};
 };
 
 template <size_t row, size_t col>
@@ -262,6 +272,18 @@ Vector<len> operator*(float scalar, const Vector<len>& v) {
         nv[i] = scalar * v[i];
     return nv;
 }
+
+template <size_t rows, size_t cols>
+Vector<rows> operator*(const Matrix<rows, cols>& m, const Vector<cols>& v) {
+	Vector<rows> product;
+	for (size_t row = 0; row < rows; row++) {
+		for (size_t col = 0; col < cols; col++) {
+			product[row] += m[row][col] * v[col];
+		}
+	}
+	return product;
+}
+
 
 template <size_t len>
 float dot_product(const Vector<len>& v1, const Vector<len>& v2) {
