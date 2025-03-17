@@ -78,7 +78,7 @@ void Renderer::draw_point(unsigned int x, unsigned int y, const Color& clr) {
 // Rendering Models
 //=============================================================================
 void Renderer::draw_model(const Model& model) {
-    Vector<3> z{view_vector(yaw, pitch)};      // back-forward vec
+    Vector<3> z{view_vector(yaw, pitch)};                  // back-forward vec
     Vector<3> x{cross_product({0, 1, 0}, z).normalize()};  // left-right vec
     Vector<3> y{cross_product(z, x).normalize()};          // up-down vec
 
@@ -106,26 +106,33 @@ void Renderer::draw_model(const Model& model) {
     for (int i = 0; i < model.nfaces(); i++) {
         std::vector<FaceTuple> face = model.face(i);
 
-		// transform the point and normal
-        Vector<3> v1 = (transMatrix * model.vertex(face[0].vertex)).dehomogenize();
-        Vector<3> v1n = (normalTransMatrix * model.normal(face[0].normal)).dehomogenize().normalize();
+        // transform the point and normal
+        Vector<3> v1 =
+            (transMatrix * model.vertex(face[0].vertex)).dehomogenize();
+        Vector<3> v1n = (normalTransMatrix * model.normal(face[0].normal))
+                            .dehomogenize()
+                            .normalize();
 
         // triangle fan the face polygon (most of the time this is just a
         // triangle. outer loop for start points
-        for (std::size_t j = 2; j < face.size(); j++) { 
-            // get the position and normal of the second point and transform them
-            Vector<3> v2 = (transMatrix * model.vertex(face[j - 1].vertex)).dehomogenize();
-            Vector<3> v2n = (normalTransMatrix * model.normal(face[j - 1].normal)).dehomogenize().normalize();
+        for (std::size_t j = 2; j < face.size(); j++) {
+            // get the position and normal of the second point and transform
+            // them
+            Vector<3> v2 =
+                (transMatrix * model.vertex(face[j - 1].vertex)).dehomogenize();
+            Vector<3> v2n =
+                (normalTransMatrix * model.normal(face[j - 1].normal))
+                    .dehomogenize()
+                    .normalize();
 
             // get the position and normal of the third point and transform them
-            Vector<3> v3 = (transMatrix * model.vertex(face[j].vertex)).dehomogenize();
-            Vector<3> v3n = (normalTransMatrix * model.normal(face[j].normal)).dehomogenize().normalize();
+            Vector<3> v3 =
+                (transMatrix * model.vertex(face[j].vertex)).dehomogenize();
+            Vector<3> v3n = (normalTransMatrix * model.normal(face[j].normal))
+                                .dehomogenize()
+                                .normalize();
 
-            Triangle triangle{{
-                {v1, v1n},
-                {v2, v2n},
-                {v3, v3n}
-			}};
+            Triangle triangle{{{v1, v1n}, {v2, v2n}, {v3, v3n}}};
             draw_face(triangle, {255, 255, 255, 255});
         }
     }
@@ -136,8 +143,6 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
     Vector<3> v1 = triangle[0].pos;
     Vector<3> v2 = triangle[1].pos;
     Vector<3> v3 = triangle[2].pos;
-
-    auto solFunc{findPlaneSolution(v1, v2, v3)};
 
     // create a bounding box around the triangle on the screen
     unsigned int maxX =
@@ -151,17 +156,59 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
     unsigned int minY = std::max(
         {static_cast<unsigned int>(std::min({v1[Y], v2[Y], v3[Y]})), 0u});
 
+    // parametrize the plane created by the triangular face.
+    //
+    // Planes can be parametrized using the general equation:
+    // ax + by + cz = d
+    // where (a, b, c) is the norm of the plane. A norm can be trivially found 
+	// by taking the cross product of two vectors on the plane.
+	//
+	// afterwards d can be solved for by substituting x, y, and z with a point
+	// found on the plane. Now z can be created as a function of x, and y
+	//
+	// z = 1/c * (-ax -by + d)
+	//
+	// therefore we have: z(x, y) = 1/c * (-ax -by + d)
+	//
+	// there is a convenient property that
+	// z(x + 1, y) = 1/c * (-a(x+1) - by + d)
+	// 			   = 1/c * (-ax -a -by + d)
+	// 			   = 1/c * (-ax -by + d) - a/c
+	// 			   = z(x, y) - a/c
+	//
+	// using a similar technique we have
+	// z(x, y + 1) = z(x, y) -b/c
+
+    Vector<3> v2_delta = v2 - v1;
+    Vector<3> v3_delta = v3 - v1;
+
+    Vector<3> plane_norm = cross_product(v2_delta, v3_delta);
+
+	// the plane is parallel with the z axis (don't render it)
+	if(plane_norm[Z] == 0) {
+		return;
+	}
+
+	float d = v1[X]*plane_norm[X] + v1[Y]*plane_norm[Y] + v1[Z]*plane_norm[Z];
+
+	float delta_x = -plane_norm[X]/plane_norm[Z];
+	float delta_y = -plane_norm[Y]/plane_norm[Z];
+
+	// what is the z value at (minX, minY)?
+	float z_row = (d - plane_norm[X] * minX - plane_norm[Y] * minY) / plane_norm[Z];
+
     for (unsigned int x = minX; x <= maxX; x++) {
+		float z = z_row;
         for (unsigned int y = minY; y <= maxY; y++) {
             if (not InsideTriangle(triangle, static_cast<float>(x),
-                                   static_cast<float>(y)))
+                                   static_cast<float>(y))) {
                 continue;
-            float z{solFunc(x, y)};
+            }
             if (z >= zbuffer_[x][y]) {
                 zbuffer_[x][y] = z;
-                Vector<3> norm{findNormalSolution(triangle,
-                                                  static_cast<float>(x),
-                                                  static_cast<float>(y))};
+//                Vector<3> norm{findNormalSolution(
+//                    triangle, static_cast<float>(x), static_cast<float>(y))};
+				Vector<3> norm = 1/3.f * (triangle[0].norm + triangle[1].norm + triangle[2].norm);
                 float intensity{dot_product(light_dir, norm.normalize())};
                 if (intensity > 0) {
                     draw_point(x, y,
@@ -170,7 +217,9 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
                                 (uint8_t)(clr.b * intensity), 255});
                 }
             }
+			z += delta_y;	
         }
+		z_row += delta_x;
     }
 }
 
@@ -198,36 +247,35 @@ bool InsideTriangle(const Triangle& triangle, float x, float y) {
 
 // given 3 points to define a plane return a function for solutions of
 // Z given some X, Y.
-std::function<float(float x, float y)> findPlaneSolution(const Vector<3>& v1,
-                                                         const Vector<3>& v2,
-                                                         const Vector<3>& v3) {
-    Vector<3> normal{cross_product(v3 - v1, v2 - v1)};
-    if (normal[Z] == 0)
-        return [](float /* x */, float /* y */) {
-            return -std::numeric_limits<float>::max();  // normal has no z
-                                                        // component
-        };
+float GetDepthOnFace(const Triangle& triangle, float x, float y) {
+    Vector<3> p1 = triangle[0].pos;
+    Vector<3> p2 = triangle[1].pos;
+    Vector<3> p3 = triangle[2].pos;
+
+    Vector<3> normal{cross_product(p2 - p1, p3 - p1)};
+    if (normal[Z] == 0) {
+        return -std::numeric_limits<float>::max();  // normal has no z
+    };
+
     float a{normal[X]};
     float b{normal[Y]};
     float c{normal[Z]};
-    float x0{v1[X]};
-    float y0{v1[Y]};
-    float z0{v1[Z]};
-    return [a, b, c, x0, y0, z0](float x, float y) {
-        return (-a * (x - x0) - b * (y - y0)) / c + z0;
-    };
+    float x0{p1[X]};
+    float y0{p1[Y]};
+    float z0{p1[Z]};
+
+    return (-a * (x - x0) - b * (y - y0)) / c + z0;
 }
 
-// find the area of a triangle in from a 2D perspective projected onto the X-Y plane.
+// find the area of a triangle in from a 2D perspective projected onto the X-Y
+// plane.
 float triangleArea(const Vector<3>& p1,
                    const Vector<3>& p2,
                    const Vector<3>& p3) {
     // this function makes use of a special property of the determinant to find
     // the area of the triangle
     Matrix<3, 3> m{
-        {p1[X], p2[X], p3[X]}, 
-		{p1[Y], p2[Y], p3[Y]}, 
-		{1.f, 1.f, 1.f}};
+        {p1[X], p2[X], p3[X]}, {p1[Y], p2[Y], p3[Y]}, {1.f, 1.f, 1.f}};
     return determinant(m) / 2;
 }
 

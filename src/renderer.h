@@ -82,9 +82,7 @@ bool InsideTriangle(const Triangle& triangle, float x, float y);
 
 // given 3 points to define a plane return a function that finds a solution
 // on the plane given some parameter of a point (x, y)
-std::function<float(float, float)> findPlaneSolution(const Vector<3>& v1,
-                                                     const Vector<3>& v2,
-                                                     const Vector<3>& v3);
+float GetDepthOnFace(const Triangle& triangle, float x, float y);
 
 float triangleArea(const Triangle& triangle);
 float triangleArea(const Vector<3>& v1,
