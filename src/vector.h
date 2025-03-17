@@ -171,17 +171,16 @@ std::ostream& operator<<(std::ostream& out, const Matrix<rows, cols>& m) {
 
 template <size_t len>
 class Vector {
-	public:
+   public:
     Vector() = default;
 
-	Vector(std::array<float, len> arr) {
-		data = arr;
-	}
+    Vector(std::array<float, len> arr) { data = arr; }
 
     // Constructor that takes an initializer list
     Vector(std::initializer_list<float> args) {
         if (args.size() != len) {
-            throw std::invalid_argument("Number of arguments must match the size of the vector");
+            throw std::invalid_argument(
+                "Number of arguments must match the size of the vector");
         }
 
         // Initialize the array from the initializer list
@@ -250,8 +249,8 @@ class Vector {
         return nv;
     }
 
-	private:
-	std::array<float, len> data{};
+   private:
+    std::array<float, len> data{};
 };
 
 template <size_t row, size_t col>
@@ -275,15 +274,14 @@ Vector<len> operator*(float scalar, const Vector<len>& v) {
 
 template <size_t rows, size_t cols>
 Vector<rows> operator*(const Matrix<rows, cols>& m, const Vector<cols>& v) {
-	Vector<rows> product;
-	for (size_t row = 0; row < rows; row++) {
-		for (size_t col = 0; col < cols; col++) {
-			product[row] += m[row][col] * v[col];
-		}
-	}
-	return product;
+    Vector<rows> product;
+    for (size_t row = 0; row < rows; row++) {
+        for (size_t col = 0; col < cols; col++) {
+            product[row] += m[row][col] * v[col];
+        }
+    }
+    return product;
 }
-
 
 template <size_t len>
 float dot_product(const Vector<len>& v1, const Vector<len>& v2) {

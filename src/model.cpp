@@ -53,11 +53,13 @@ Vector<4> ModelParsing::parse_vector(const std::string& line) {
     std::vector<std::string> split_strs{ModelParsing::split_string(line)};
 
     return {
-			std::stof(split_strs[1]),  // don't count 'v' char
-            std::stof(split_strs[2]), 
-			std::stof(split_strs[3]),
-			split_strs.size() == 5 ? std::stof(split_strs[4]) : 1.f // vectors may optionally include the 'w' index for the vector otherwise if not provided default to 1.0
-	};
+        std::stof(split_strs[1]),  // don't count 'v' char
+        std::stof(split_strs[2]), std::stof(split_strs[3]),
+        split_strs.size() == 5
+            ? std::stof(split_strs[4])
+            : 1.f  // vectors may optionally include the 'w' index for the
+                   // vector otherwise if not provided default to 1.0
+    };
 }
 
 std::vector<FaceTuple> ModelParsing::parse_face(const std::string& line) {
