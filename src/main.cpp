@@ -16,13 +16,14 @@ int main(int argc, char** argv) {
         // let's time the execution time
         auto start_time = std::chrono::high_resolution_clock::now();
 
-        int frames{100};
+        int frames{1000};
         Model model{model_name};
         Renderer* renderer = Renderer::GetRenderer();
         renderer->yaw = 0;
         renderer->pitch = 0;
         for (int i = 0; i < frames; i++) {
-            renderer->yaw = 1.f / 4.f * M_PI_2f * static_cast<float>(i) / static_cast<float>(frames);
+            renderer->yaw = 4 * M_PI_2f * static_cast<float>(i) /
+                            static_cast<float>(frames);
 
             renderer->draw_model(model);
 
@@ -35,8 +36,8 @@ int main(int argc, char** argv) {
                 .count();
         std::cout << "It took " << milliseconds_elapsed
                   << " milliseconds to print " << frames << " frames ("
-                  << static_cast<float>(milliseconds_elapsed) /
-                         static_cast<float>(frames)
+                  << static_cast<float>(frames) /
+                         static_cast<float>(milliseconds_elapsed) * 1000.f
                   << " FPS)\n";
 
     } catch (const char* ex) {
