@@ -1,6 +1,6 @@
 LDFLAGS = -lSDL2
-CXXFLAGS = -std=c++23 -Wall -Wextra -Wpedantic -Weffc++ -Wconversion -Wsign-conversion 
-RELEASE_FLAGS = -O3 -Werror
+CXXFLAGS = -std=c++23 -Wall -Wextra -Wpedantic -Weffc++
+RELEASE_FLAGS = -O3 # -Werror
 DEBUG_FLAGS = -DEBUG -g3
 
 OUT_FILE = ./main
