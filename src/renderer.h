@@ -11,13 +11,13 @@
 #include "model.h"
 #include "vector.h"
 
-constexpr unsigned int SCREEN_WIDTH = 900;
-constexpr unsigned int SCREEN_HEIGHT = 900;
-constexpr unsigned int DEPTH = 900;
+constexpr int SCREEN_WIDTH = 900;
+constexpr int SCREEN_HEIGHT = 900;
+constexpr int DEPTH = 900;
 
 // Color struct with 4 8-bit channels.
 struct Color {
-    uint8_t r, g, b, a;
+    int r, g, b, a;
 };
 
 // 2D point struct using floats
@@ -46,7 +46,7 @@ class Renderer {
     void clear_screen();
 
     // draws a point of given color on the screen
-    void draw_point(unsigned int x, unsigned int y, const Color& clr);
+    void draw_point(int x, int y, const Color& clr);
 
     // render a triangular face with appropriate shading and coloring using
     // Phong shading.

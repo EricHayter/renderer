@@ -40,8 +40,8 @@ Renderer::Renderer() {
     sdl_renderer_ = SDL_CreateRenderer(window_, -1, 0);
 
     // set the zbuffer entries to be as far back as possible
-    for (std::size_t i = 0; i < zbuffer_.size(); i++) {
-        for (std::size_t j = 0; j < zbuffer_[i].size(); j++) {
+    for (int i = 0; i < static_cast<int>(zbuffer_.size()); i++) {
+        for (int j = 0; j < static_cast<int>(zbuffer_[i].size()); j++) {
             zbuffer_[i][j] = -std::numeric_limits<float>::max();
         }
     }
@@ -61,17 +61,16 @@ void Renderer::clear_screen() {
     SDL_SetRenderDrawColor(sdl_renderer_, 0, 0, 0, 0);
 
     SDL_RenderClear(sdl_renderer_);
-    for (std::size_t i = 0; i < zbuffer_.size(); i++) {
-        for (std::size_t j = 0; j < zbuffer_[i].size(); j++) {
+    for (int i = 0; i < static_cast<int>(zbuffer_.size()); i++) {
+        for (int j = 0; j < static_cast<int>(zbuffer_[i].size()); j++) {
             zbuffer_[i][j] = -std::numeric_limits<float>::max();
         }
     }
 }
 
-void Renderer::draw_point(unsigned int x, unsigned int y, const Color& clr) {
+void Renderer::draw_point(int x, int y, const Color& clr) {
     SDL_SetRenderDrawColor(sdl_renderer_, clr.r, clr.g, clr.b, clr.a);
-    SDL_RenderDrawPoint(sdl_renderer_, static_cast<int>(x),
-                        static_cast<int>(y));
+    SDL_RenderDrawPoint(sdl_renderer_, x, y);
 }
 
 //=============================================================================
@@ -115,7 +114,7 @@ void Renderer::draw_model(const Model& model) {
 
         // triangle fan the face polygon (most of the time this is just a
         // triangle. outer loop for start points
-        for (std::size_t j = 2; j < face.size(); j++) {
+        for (int j = 2; j < static_cast<int>(face.size()); j++) {
             // get the position and normal of the second point and transform
             // them
             Vector<3> v2 =
@@ -144,17 +143,11 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
     Vector<3> v2 = triangle[1].pos;
     Vector<3> v3 = triangle[2].pos;
 
-    // create a bounding box around the triangle on the screen
-    unsigned int maxX =
-        std::min({static_cast<unsigned int>(std::max({v1[X], v2[X], v3[X]})),
-                  SCREEN_WIDTH - 1});
-    unsigned int minX = std::max(
-        {static_cast<unsigned int>(std::min({v1[X], v2[X], v3[X]})), 0u});
-    unsigned int maxY =
-        std::min({static_cast<unsigned int>(std::max({v1[Y], v2[Y], v3[Y]})),
-                  SCREEN_HEIGHT - 1});
-    unsigned int minY = std::max(
-        {static_cast<unsigned int>(std::min({v1[Y], v2[Y], v3[Y]})), 0u});
+    // create a bounding box around the triangle to be drawn
+    int maxX = std::min({static_cast<int>(std::max({v1[X], v2[X], v3[X]})), SCREEN_WIDTH - 1});
+ 	int minX = std::max({static_cast<int>(std::min({v1[X], v2[X], v3[X]})), 0});
+    int maxY = std::min({static_cast<int>(std::max({v1[Y], v2[Y], v3[Y]})), SCREEN_HEIGHT - 1});
+    int minY = std::max({static_cast<int>(std::min({v1[Y], v2[Y], v3[Y]})), 0});
 
     // parametrize the plane created by the triangular face.
     //
@@ -197,9 +190,10 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
 	// what is the z value at (minX, minY)?
 	float z_row = (d - plane_norm[X] * minX - plane_norm[Y] * minY) / plane_norm[Z];
 
-    for (unsigned int x = minX; x <= maxX; x++) {
+	Vector<3> norm = 1/3.f * (triangle[0].norm + triangle[1].norm + triangle[2].norm);
+    for (int x = minX; x <= maxX; x++) {
 		float z = z_row;
-        for (unsigned int y = minY; y <= maxY; y++) {
+        for (int y = minY; y <= maxY; y++) {
             if (not InsideTriangle(triangle, static_cast<float>(x),
                                    static_cast<float>(y))) {
                 continue;
@@ -208,13 +202,12 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
                 zbuffer_[x][y] = z;
 //                Vector<3> norm{findNormalSolution(
 //                    triangle, static_cast<float>(x), static_cast<float>(y))};
-				Vector<3> norm = 1/3.f * (triangle[0].norm + triangle[1].norm + triangle[2].norm);
                 float intensity{dot_product(light_dir, norm.normalize())};
                 if (intensity > 0) {
                     draw_point(x, y,
-                               {(uint8_t)(clr.r * intensity),
-                                (uint8_t)(clr.g * intensity),
-                                (uint8_t)(clr.b * intensity), 255});
+                               {static_cast<int>(clr.r * intensity),
+                                static_cast<int>(clr.g * intensity),
+                                static_cast<int>(clr.b * intensity), 255});
                 }
             }
 			z += delta_y;	
