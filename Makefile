@@ -8,7 +8,7 @@ SOURCES = $(wildcard src/*.cpp)
 HEADERS = $(wildcard src/*.h)
 OBJECTS = $(SOURCES:.cpp=.o)
 
-all: $(OUT_FILE)
+all: release
 
 $(OUT_FILE): $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $(OUT_FILE) $(LDFLAGS) $(RELEASE_FLAGS)
