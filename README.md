@@ -15,6 +15,12 @@ As this program requires the use of SDL users must install the required packages
 in order to build. For instructions on installing the dependencies look at the 
 [SDL wiki](https://wiki.libsdl.org/SDL2/Installation).
 
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=release
+cd build
+./renderer ../obj_files/head.obj 
+```
+
 ## Progression :chart_with_upwards_trend: 
 I've taken an incremental approach to the project initially starting with a very
 basic renderer and slowly adding additional features. Here's the progress that
