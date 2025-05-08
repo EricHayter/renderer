@@ -13,6 +13,7 @@ add_executable(renderer
 	src/model.cpp
 	src/renderer.cpp
 	src/vector.cpp
+	src/threadpool.cpp
 )
 
 target_include_directories(renderer
