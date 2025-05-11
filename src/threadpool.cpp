@@ -14,7 +14,7 @@ void ThreadPool::add_task(const std::function<void ()> &task)
 void ThreadPool::join()
 {
 	std::unique_lock<std::mutex> lk(m_mut);
-	m_cv.wait(lk, [this](){ m_tasks.empty(); });
+	m_cv.wait(lk, [this](){ return m_tasks.empty(); });
 }
 
 ThreadPool::ThreadPool() : ThreadPool(std::max(static_cast<int>(std::thread::hardware_concurrency()) - 1, 1)) {}
