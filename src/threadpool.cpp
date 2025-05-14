@@ -23,9 +23,9 @@ ThreadPool::ThreadPool(int thread_count) : m_thread_count(thread_count)
 {
 	m_workers.reserve(m_thread_count);
 	auto worker_function = [this](){
-		std::unique_lock<std::mutex> lk(m_mut);
 		while (true)
 		{
+			std::unique_lock<std::mutex> lk(m_mut);
 			m_cv.wait(lk, [this](){ return m_terminate || not m_tasks.empty(); });
 			// ready for cleanup with no more tasks
 			if (m_tasks.empty() && m_terminate)
