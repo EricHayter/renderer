@@ -46,7 +46,7 @@ class Renderer {
     void clear_screen();
 
     // draws a point of given color on the screen
-    void draw_point(int x, int y, const Color& clr);
+    void draw_point(int x, int y, int z, const Color& clr);
 
     // render a triangular face with appropriate shading and coloring using
     // Phong shading.
@@ -76,6 +76,9 @@ class Renderer {
     // colors at the same (x,y) pairs put different depths relative to the
     // camera.
     std::array<std::array<float, SCREEN_HEIGHT>, SCREEN_WIDTH> zbuffer_{};
+
+	// mutex for drawing points
+	std::mutex mut_;
 };
 
 bool InsideTriangle(const Triangle& triangle, float x, float y);

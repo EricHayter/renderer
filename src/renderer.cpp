@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "threadpool.h"
 #include <SDL2/SDL_render.h>
 #include <algorithm>
 #include <array>
@@ -6,6 +7,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <thread>
 #include "model.h"
 #include "vector.h"
 
@@ -68,7 +70,11 @@ void Renderer::clear_screen() {
     }
 }
 
-void Renderer::draw_point(int x, int y, const Color& clr) {
+void Renderer::draw_point(int x, int y, int z, const Color& clr) {
+	std::lock_guard<std::mutex> lk(mut_);
+	if (z < zbuffer_[x][y])
+		return;
+    zbuffer_[x][y] = z;
     SDL_SetRenderDrawColor(sdl_renderer_, clr.r, clr.g, clr.b, clr.a);
     SDL_RenderDrawPoint(sdl_renderer_, x, y);
 }
@@ -102,6 +108,9 @@ void Renderer::draw_model(const Model& model) {
     Matrix<4, 4> transMatrix{viewPort * projMatrix * modelView};
     Matrix<4, 4> normalTransMatrix{inverse(transMatrix).transpose()};
 
+	// create a threadpool for drawing faces
+	ThreadPool tp;
+
     for (int i = 0; i < model.nfaces(); i++) {
         std::vector<FaceTuple> face = model.face(i);
 
@@ -132,9 +141,14 @@ void Renderer::draw_model(const Model& model) {
                                 .normalize();
 
             Triangle triangle{{{v1, v1n}, {v2, v2n}, {v3, v3n}}};
-            draw_face(triangle, {255, 255, 255, 255});
+   //         draw_face(triangle, {255, 255, 255, 255});
+			tp.add_task([this, triangle](){
+            	draw_face(triangle, {255, 255, 255, 255});
+			});
         }
     }
+	using namespace std::chrono_literals;
+	std::this_thread::sleep_for(1s);
     SDL_RenderPresent(sdl_renderer_);
 }
 
@@ -198,18 +212,33 @@ void Renderer::draw_face(const Triangle& triangle, const Color& clr) {
                                    static_cast<float>(y))) {
                 continue;
             }
-            if (z >= zbuffer_[x][y]) {
-                zbuffer_[x][y] = z;
+//            if (z >= zbuffer_[x][y]) {
+//                zbuffer_[x][y] = z;
+////                Vector<3> norm{findNormalSolution(
+////                    triangle, static_cast<float>(x), static_cast<float>(y))};
+//                float intensity{dot_product(light_dir, norm.normalize())};
+//                if (intensity > 0) {
+//                    draw_point(x, y,
+//                               {static_cast<int>(clr.r * intensity),
+//                                static_cast<int>(clr.g * intensity),
+//                                static_cast<int>(clr.b * intensity), 255});
+//                }
+//            }
+
+			// REMOVE THIS AFTER THIS IS FOR   TESTING
+            {
 //                Vector<3> norm{findNormalSolution(
 //                    triangle, static_cast<float>(x), static_cast<float>(y))};
                 float intensity{dot_product(light_dir, norm.normalize())};
                 if (intensity > 0) {
-                    draw_point(x, y,
-                               {static_cast<int>(clr.r * intensity),
-                                static_cast<int>(clr.g * intensity),
-                                static_cast<int>(clr.b * intensity), 255});
+					draw_point(x, y, z,
+							   {static_cast<int>(clr.r * intensity),
+								static_cast<int>(clr.g * intensity),
+								static_cast<int>(clr.b * intensity), 255});
                 }
             }
+
+
 			z += delta_y;	
         }
 		z_row += delta_x;
